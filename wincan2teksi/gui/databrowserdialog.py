@@ -579,8 +579,7 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                                 )
                                             )
                                             if not continue_import:
-                                                self.hide_progress()
-                                                return
+                                                raise InterruptedError("Import cancelled by user")
                                             ok = file_layer.addFeature(of)
                                             if ok:
                                                 logger.debug(
@@ -600,10 +599,9 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                                     + f"{_fields}"
                                                 )
                                                 logger.error(message)
-                                                self.hide_progress()
                                                 self.cannotImportArea.show()
                                                 self.cannotImportLabel.setText(message)
-                                                return
+                                                raise InterruptedError("Import failed")
                                         logger.debug(
                                             f"no video found for maintenance event (fid: {maintenance['obj_id']})"
                                         )
@@ -628,10 +626,9 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                         )
                                         + f"{_fields}"
                                     )
-                                    self.hide_progress()
                                     self.cannotImportArea.show()
                                     self.cannotImportLabel.setText(message)
-                                    return
+                                    raise InterruptedError("Import failed")
 
                                 # set fkey maintenance event id to all damages
                                 for k, _ in enumerate(damages):
@@ -659,10 +656,9 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                             + f"{_fields}"
                                         )
                                         logger.error(message)
-                                        self.hide_progress()
                                         self.cannotImportArea.show()
                                         self.cannotImportLabel.setText(message)
-                                        return
+                                        raise InterruptedError("Import failed")
 
                                     # add media files to od_file with reference to damage
                                     for mf in media[k]:
@@ -693,8 +689,7 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                                 )
                                             )
                                             if not continue_import:
-                                                self.hide_progress()
-                                                return
+                                                raise InterruptedError("Import cancelled by user")
                                         elif mf[0] == "video":
                                             of["path_relative"] = (
                                                 self.data_path_line_edit.filePath()
@@ -708,8 +703,7 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                                 )
                                             )
                                             if not continue_import:
-                                                self.hide_progress()
-                                                return
+                                                raise InterruptedError("Import cancelled by user")
                                         else:
                                             logger.error(
                                                 f"unknown media type {mf[0]} for file {mf[1]}"
@@ -736,10 +730,9 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                                 + f"{_fields}"
                                             )
                                             logger.error(message)
-                                            self.hide_progress()
                                             self.cannotImportArea.show()
                                             self.cannotImportLabel.setText(message)
-                                            return
+                                            raise InterruptedError("Import failed")
 
                                 # write in relation table (wastewater structure - maintenance events)
                                 jf = QgsFeature()
@@ -771,10 +764,9 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                         + f"{_fields}"
                                     )
                                     logger.error(message)
-                                    self.hide_progress()
                                     self.cannotImportArea.show()
                                     self.cannotImportLabel.setText(message)
-                                    return
+                                    raise InterruptedError("Import failed")
 
                                 # get current reach
                                 rf = QgsFeature()
