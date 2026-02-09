@@ -56,7 +56,7 @@ class Wincan2Teksi(QObject):
         locale_path = self.plugin_dir / "i18n" / f"QGIS_TEKSI_Wincan_Vx_Importer_Plugin_{locale}.qm"
         if locale_path.exists():
             self.translator = QTranslator()
-            self.translator.load(locale_path)
+            self.translator.load(str(locale_path))
             QCoreApplication.installTranslator(self.translator)
 
     def initGui(self):
