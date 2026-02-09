@@ -484,177 +484,124 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
         file_layer_id = Settings().file_layer.value()
         file_layer = QgsProject.instance().mapLayer(file_layer_id)
 
-        with edit(join_layer):
-            with edit(file_layer):
-                with edit(damage_layer):
-                    with edit(maintenance_layer):
-                        i = 0
-                        for ws_obj_id, elements in features.items():
-                            QCoreApplication.processEvents()
-                            if self.cancel:
-                                self.progressBar.hide()
-                                self.cancelButton.hide()
-                                self.importButton.show()
-                                break
+        try:
+            with edit(join_layer):
+                with edit(file_layer):
+                    with edit(damage_layer):
+                        with edit(maintenance_layer):
+                            i = 0
+                            for ws_obj_id, elements in features.items():
+                                QCoreApplication.processEvents()
+                                if self.cancel:
+                                    raise InterruptedError("Import cancelled by user")
 
-                            maintenance = elements["maintenance"]
-                            damages = elements["damages"]
-                            media = elements["media"]
-                            structure_condition = elements["structure_condition"]
+                                maintenance = elements["maintenance"]
+                                damages = elements["damages"]
+                                media = elements["media"]
+                                structure_condition = elements["structure_condition"]
 
-                            if len(damages) == 0:
-                                continue
+                                if len(damages) == 0:
+                                    continue
 
-                            # write video for maintenance event
-                            videos = []
-                            for k, _ in enumerate(damages):
-                                for mf in media[k]:
-                                    if mf[1] in videos:
-                                        continue
-                                    if mf[0] == "video":
-                                        maintenance["videonumber"] = mf[1]
+                                # write video for maintenance event
+                                videos = []
+                                for k, _ in enumerate(damages):
+                                    for mf in media[k]:
+                                        if mf[1] in videos:
+                                            continue
+                                        if mf[0] == "video":
+                                            maintenance["videonumber"] = mf[1]
 
-                                        of = QgsFeature()
-                                        init_fields = file_layer.fields()
-                                        of.setFields(init_fields)
-                                        of.initAttributes(init_fields.size())
-                                        of["obj_id"] = file_layer.dataProvider().defaultValue(
-                                            file_layer.fields().indexFromName("obj_id")
-                                        )
-                                        of["class"] = 3825  # i.e. maintenance event
-                                        of["kind"] = 3775  # i.e. video
-                                        of["object"] = maintenance["obj_id"]
-                                        of["identifier"] = mf[1]
-                                        sep = os.path.sep
-                                        of["path_relative"] = of["path_relative"] = (
-                                            self.data_path_line_edit.text() + f"{sep}Video{sep}Sec"
-                                        )
-                                        ok = file_layer.addFeature(of)
-                                        if ok:
-                                            logger.debug(
-                                                f"adding feature to file layer (fid: {of['obj_id']}): ok"
+                                            of = QgsFeature()
+                                            init_fields = file_layer.fields()
+                                            of.setFields(init_fields)
+                                            of.initAttributes(init_fields.size())
+                                            of["obj_id"] = file_layer.dataProvider().defaultValue(
+                                                file_layer.fields().indexFromName("obj_id")
                                             )
-                                            videos.append(mf[1])
-                                        else:
-                                            _fields = ""
-                                            for name, value in zip(
-                                                file_layer.fields().names(), of.attributes()
-                                            ):
-                                                _fields += f"{name}: {value}\n"
-                                            message = (
-                                                self.tr(
-                                                    f"error adding feature to file layer (fid: {of['obj_id']}): error. "
+                                            of["class"] = 3825  # i.e. maintenance event
+                                            of["kind"] = 3775  # i.e. video
+                                            of["object"] = maintenance["obj_id"]
+                                            of["identifier"] = mf[1]
+                                            sep = os.path.sep
+                                            of["path_relative"] = of["path_relative"] = (
+                                                self.data_path_line_edit.text()
+                                                + f"{sep}Video{sep}Sec"
+                                            )
+                                            ok = file_layer.addFeature(of)
+                                            if ok:
+                                                logger.debug(
+                                                    f"adding feature to file layer (fid: {of['obj_id']}): ok"
                                                 )
-                                                + f"{_fields}"
-                                            )
-                                            logger.error(message)
-                                            self.hide_progress()
-                                            self.cannotImportArea.show()
-                                            self.cannotImportLabel.setText(message)
-                                            return
-                                    logger.debug(
-                                        f"no video found for maintenance event (fid: {maintenance['obj_id']})"
-                                    )
+                                                videos.append(mf[1])
+                                            else:
+                                                _fields = ""
+                                                for name, value in zip(
+                                                    file_layer.fields().names(), of.attributes()
+                                                ):
+                                                    _fields += f"{name}: {value}\n"
+                                                message = (
+                                                    self.tr(
+                                                        f"error adding feature to file layer (fid: {of['obj_id']}): error. "
+                                                    )
+                                                    + f"{_fields}"
+                                                )
+                                                logger.error(message)
+                                                self.hide_progress()
+                                                self.cannotImportArea.show()
+                                                self.cannotImportLabel.setText(message)
+                                                return
+                                        logger.debug(
+                                            f"no video found for maintenance event (fid: {maintenance['obj_id']})"
+                                        )
 
-                            # write maintenance feature
-                            ok = maintenance_layer.addFeature(maintenance)
-                            if ok:
-                                logger.debug(
-                                    "adding feature to maintenance layer (fid: {}): ok".format(
-                                        maintenance["obj_id"]
-                                    )
-                                )
-                            else:
-                                _fields = ""
-                                for name, value in zip(
-                                    maintenance_layer.fields().names(), maintenance.attributes()
-                                ):
-                                    _fields += f"{name}: {value}\n"
-                                message = (
-                                    self.tr(
-                                        f"error adding feature to maintenance layer (fid: {maintenance['obj_id']}): error. "
-                                    )
-                                    + f"{_fields}"
-                                )
-                                self.hide_progress()
-                                self.cannotImportArea.show()
-                                self.cannotImportLabel.setText(message)
-                                return
-
-                            # set fkey maintenance event id to all damages
-                            for k, _ in enumerate(damages):
-                                damages[k]["fk_examination"] = maintenance["obj_id"]
-
-                            # write damages
-                            for k, damage in enumerate(damages):
-                                ok = damage_layer.addFeature(damage)
+                                # write maintenance feature
+                                ok = maintenance_layer.addFeature(maintenance)
                                 if ok:
                                     logger.debug(
-                                        "adding feature to damage layer (fid: {}): {}".format(
-                                            damage["obj_id"], "ok" if ok else "error"
+                                        "adding feature to maintenance layer (fid: {}): ok".format(
+                                            maintenance["obj_id"]
                                         )
                                     )
                                 else:
                                     _fields = ""
                                     for name, value in zip(
-                                        damage_layer.fields().names(), damage.attributes()
+                                        maintenance_layer.fields().names(), maintenance.attributes()
                                     ):
                                         _fields += f"{name}: {value}\n"
                                     message = (
                                         self.tr(
-                                            f"error adding feature to damage layer (fid: {damage['obj_id']}): error. "
+                                            f"error adding feature to maintenance layer (fid: {maintenance['obj_id']}): error. "
                                         )
                                         + f"{_fields}"
                                     )
-                                    logger.error(message)
                                     self.hide_progress()
                                     self.cannotImportArea.show()
                                     self.cannotImportLabel.setText(message)
                                     return
 
-                                # add media files to od_file with reference to damage
-                                for mf in media[k]:
-                                    of = QgsFeature()
-                                    init_fields = file_layer.fields()
-                                    of.setFields(init_fields)
-                                    of.initAttributes(init_fields.size())
-                                    of["obj_id"] = file_layer.dataProvider().defaultValue(
-                                        file_layer.fields().indexFromName("obj_id")
-                                    )
-                                    of["class"] = 3871  # i.e. damage
-                                    of["kind"] = 3772 if mf[0] == "picture" else 3775  # i.e. video
-                                    of["object"] = damage["obj_id"]
-                                    of["identifier"] = mf[1]
-                                    sep = os.path.sep
-                                    if mf[0] == "picture":
-                                        of["path_relative"] = (
-                                            self.data_path_line_edit.text()
-                                            + f"{sep}Picture{sep}Sec"
-                                        )
-                                    elif mf[0] == "video":
-                                        of["path_relative"] = (
-                                            self.data_path_line_edit.text() + f"{sep}Video{sep}Sec"
-                                        )
-                                    else:
-                                        logger.error(f"unknown media type {mf[0]} for file {mf[1]}")
-                                        continue
-                                    ok = file_layer.addFeature(of)
+                                # set fkey maintenance event id to all damages
+                                for k, _ in enumerate(damages):
+                                    damages[k]["fk_examination"] = maintenance["obj_id"]
 
+                                # write damages
+                                for k, damage in enumerate(damages):
+                                    ok = damage_layer.addFeature(damage)
                                     if ok:
                                         logger.debug(
-                                            "adding media to file layer (fid: {}): ok".format(
-                                                of["obj_id"]
+                                            "adding feature to damage layer (fid: {}): {}".format(
+                                                damage["obj_id"], "ok" if ok else "error"
                                             )
                                         )
                                     else:
                                         _fields = ""
                                         for name, value in zip(
-                                            file_layer.fields().names(), of.attributes()
+                                            damage_layer.fields().names(), damage.attributes()
                                         ):
                                             _fields += f"{name}: {value}\n"
                                         message = (
                                             self.tr(
-                                                f"error adding media to file layer (fid: {of['obj_id']}): error. "
+                                                f"error adding feature to damage layer (fid: {damage['obj_id']}): error. "
                                             )
                                             + f"{_fields}"
                                         )
@@ -664,66 +611,129 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                         self.cannotImportLabel.setText(message)
                                         return
 
-                            # write in relation table (wastewater structure - maintenance events)
-                            jf = QgsFeature()
-                            init_fields = join_layer.fields()
-                            jf.setFields(init_fields)
-                            jf.initAttributes(init_fields.size())
-                            jf["obj_id"] = join_layer.dataProvider().defaultValue(
-                                join_layer.fields().indexFromName("obj_id")
-                            )
-                            jf["fk_wastewater_structure"] = ws_obj_id
-                            jf["fk_maintenance_event"] = maintenance["obj_id"]
-                            ok = join_layer.addFeature(jf)
-                            if ok:
-                                logger.debug(
-                                    "adding feature to join layer (fid: {}): ok".format(
-                                        jf["obj_id"]
-                                    )
-                                )
-                            else:
-                                _fields = ""
-                                for name, value in zip(
-                                    join_layer.fields().names(), jf.attributes()
-                                ):
-                                    _fields += f"{name}: {value}\n"
-                                message = (
-                                    self.tr(
-                                        f"error adding feature to join layer (fid: {jf['obj_id']}): error. "
-                                    )
-                                    + f"{_fields}"
-                                )
-                                logger.error(message)
-                                self.hide_progress()
-                                self.cannotImportArea.show()
-                                self.cannotImportLabel.setText(message)
-                                return
+                                    # add media files to od_file with reference to damage
+                                    for mf in media[k]:
+                                        of = QgsFeature()
+                                        init_fields = file_layer.fields()
+                                        of.setFields(init_fields)
+                                        of.initAttributes(init_fields.size())
+                                        of["obj_id"] = file_layer.dataProvider().defaultValue(
+                                            file_layer.fields().indexFromName("obj_id")
+                                        )
+                                        of["class"] = 3871  # i.e. damage
+                                        of["kind"] = (
+                                            3772 if mf[0] == "picture" else 3775
+                                        )  # i.e. video
+                                        of["object"] = damage["obj_id"]
+                                        of["identifier"] = mf[1]
+                                        sep = os.path.sep
+                                        if mf[0] == "picture":
+                                            of["path_relative"] = (
+                                                self.data_path_line_edit.text()
+                                                + f"{sep}Picture{sep}Sec"
+                                            )
+                                        elif mf[0] == "video":
+                                            of["path_relative"] = (
+                                                self.data_path_line_edit.text()
+                                                + f"{sep}Video{sep}Sec"
+                                            )
+                                        else:
+                                            logger.error(
+                                                f"unknown media type {mf[0]} for file {mf[1]}"
+                                            )
+                                            continue
+                                        ok = file_layer.addFeature(of)
 
-                            # get current reach
-                            rf = QgsFeature()
-                            layer_id = Settings().wastewater_structure_layer.value()
-                            wsl = QgsProject.instance().mapLayer(layer_id)
-                            if wsl is not None:
-                                request = QgsFeatureRequest().setFilterExpression(
-                                    "\"obj_id\" = '{}'".format(ws_obj_id)
+                                        if ok:
+                                            logger.debug(
+                                                "adding media to file layer (fid: {}): ok".format(
+                                                    of["obj_id"]
+                                                )
+                                            )
+                                        else:
+                                            _fields = ""
+                                            for name, value in zip(
+                                                file_layer.fields().names(), of.attributes()
+                                            ):
+                                                _fields += f"{name}: {value}\n"
+                                            message = (
+                                                self.tr(
+                                                    f"error adding media to file layer (fid: {of['obj_id']}): error. "
+                                                )
+                                                + f"{_fields}"
+                                            )
+                                            logger.error(message)
+                                            self.hide_progress()
+                                            self.cannotImportArea.show()
+                                            self.cannotImportLabel.setText(message)
+                                            return
+
+                                # write in relation table (wastewater structure - maintenance events)
+                                jf = QgsFeature()
+                                init_fields = join_layer.fields()
+                                jf.setFields(init_fields)
+                                jf.initAttributes(init_fields.size())
+                                jf["obj_id"] = join_layer.dataProvider().defaultValue(
+                                    join_layer.fields().indexFromName("obj_id")
                                 )
-                                rf = next(wsl.getFeatures(request))
-                            if rf.isValid():
-                                # update structure condition if worse
-                                old_level = structure_condition_2_damage_level(
-                                    rf["structure_condition"]
-                                )
-                                if old_level is None or old_level > "Z{}".format(
-                                    structure_condition
-                                ):
-                                    rf["structure_condition"] = damage_level_2_structure_condition(
+                                jf["fk_wastewater_structure"] = ws_obj_id
+                                jf["fk_maintenance_event"] = maintenance["obj_id"]
+                                ok = join_layer.addFeature(jf)
+                                if ok:
+                                    logger.debug(
+                                        "adding feature to join layer (fid: {}): ok".format(
+                                            jf["obj_id"]
+                                        )
+                                    )
+                                else:
+                                    _fields = ""
+                                    for name, value in zip(
+                                        join_layer.fields().names(), jf.attributes()
+                                    ):
+                                        _fields += f"{name}: {value}\n"
+                                    message = (
+                                        self.tr(
+                                            f"error adding feature to join layer (fid: {jf['obj_id']}): error. "
+                                        )
+                                        + f"{_fields}"
+                                    )
+                                    logger.error(message)
+                                    self.hide_progress()
+                                    self.cannotImportArea.show()
+                                    self.cannotImportLabel.setText(message)
+                                    return
+
+                                # get current reach
+                                rf = QgsFeature()
+                                layer_id = Settings().wastewater_structure_layer.value()
+                                wsl = QgsProject.instance().mapLayer(layer_id)
+                                if wsl is not None:
+                                    request = QgsFeatureRequest().setFilterExpression(
+                                        "\"obj_id\" = '{}'".format(ws_obj_id)
+                                    )
+                                    rf = next(wsl.getFeatures(request))
+                                if rf.isValid():
+                                    # update structure condition if worse
+                                    old_level = structure_condition_2_damage_level(
+                                        rf["structure_condition"]
+                                    )
+                                    if old_level is None or old_level > "Z{}".format(
                                         structure_condition
-                                    )
-                                    wsl.updateFeature(rf)
+                                    ):
+                                        rf["structure_condition"] = (
+                                            damage_level_2_structure_condition(structure_condition)
+                                        )
+                                        wsl.updateFeature(rf)
 
-                            i += 1
-                            self.progressBar.setValue(i)
-                            QCoreApplication.processEvents()
+                                i += 1
+                                self.progressBar.setValue(i)
+                                QCoreApplication.processEvents()
+
+        except InterruptedError:
+            self.progressBar.hide()
+            self.cancelButton.hide()
+            self.importButton.show()
+            return
 
         self.progressBar.hide()
         self.cancelButton.hide()
