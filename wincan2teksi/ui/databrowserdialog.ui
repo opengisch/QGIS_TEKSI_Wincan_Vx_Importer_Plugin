@@ -135,7 +135,7 @@
        </widget>
       </item>
       <item row="1" column="2" colspan="3">
-       <widget class="QgsFileWidget" name="widget_3" native="true"/>
+       <widget class="QgsFileWidget" name="data_path_line_edit" native="true"/>
       </item>
       <item row="2" column="2" colspan="3">
        <widget class="QgsFileWidget" name="meta_file_widget" native="true">
