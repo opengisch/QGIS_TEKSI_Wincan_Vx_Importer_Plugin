@@ -101,7 +101,6 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                 widget_config,
                 self.operatingCompanyComboBox,
                 self,
-                editor_context,
             )
 
         self.sectionWidget.finish_init(iface, self.projects)
