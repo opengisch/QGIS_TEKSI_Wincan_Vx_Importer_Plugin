@@ -104,7 +104,8 @@ def read_data(file: str) -> WinCanData:
                 if operators:
                     for operator in operators:
                         if operator["OP_PK"] == inspection.operator:
-                            inspection.operator = operator["OP_Name1"]
+                            # using OP_Key as OP_Name1 seems to be wrongly filled in AITV data
+                            inspection.operator = operator["OP_Key"]
 
                 observations = __read_table(
                     cursor,
