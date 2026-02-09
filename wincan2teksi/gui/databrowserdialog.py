@@ -147,10 +147,34 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
             if self.cancel:
                 break
             # former cleanup to remove previous search results
+            has_channel = False
             for section in project.sections.values():
-                section.teksi_channel_id_1 = None
-                section.teksi_channel_id_2 = None
-                section.teksi_channel_id_3 = None
+                if (
+                    section.teksi_channel_id_1 is not None
+                    or section.teksi_channel_id_2 is not None
+                    or section.teksi_channel_id_3 is not None
+                ):
+                    has_channel = True
+            if has_channel:
+                reply = QMessageBox.question(
+                    self,
+                    self.tr("Clear previous search results?"),
+                    self.tr(
+                        "Performing a new search will remove all previous matching data. Do you want to continue?"
+                    ),
+                    QMessageBox.Yes | QMessageBox.No,
+                )
+                if reply != QMessageBox.Yes:
+                    self.progressBar.hide()
+                    self.cancelButton.hide()
+                    self.importButton.show()
+                    self.sectionWidget.setEnabled(True)
+                    self.sectionWidget.set_project_id(self.current_project_id)
+                    return
+                for section in project.sections.values():
+                    section.teksi_channel_id_1 = None
+                    section.teksi_channel_id_2 = None
+                    section.teksi_channel_id_3 = None
 
             for section in project.sections.values():
                 QCoreApplication.processEvents()
