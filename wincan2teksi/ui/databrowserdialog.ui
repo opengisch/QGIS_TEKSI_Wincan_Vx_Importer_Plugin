@@ -228,7 +228,7 @@
     </widget>
    </item>
    <item row="8" column="0" colspan="3">
-    <widget class="QScrollArea" name="scrollArea">
+    <widget class="QScrollArea" name="cannotImportScrollArea">
      <property name="widgetResizable">
       <bool>true</bool>
      </property>

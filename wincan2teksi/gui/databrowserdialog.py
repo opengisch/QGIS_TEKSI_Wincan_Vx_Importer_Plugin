@@ -81,7 +81,7 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
         if data.pdf_file:
             self.pdf_path_widget.setFilePath(data.pdf_file)
 
-        self.cannotImportArea.hide()
+        self.cannotImportScrollArea.hide()
         self.progressBar.setTextVisible(True)
         self.progressBar.hide()
         self.cancelButton.hide()
@@ -203,7 +203,7 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                     if feature.isValid():
                         section.teksi_channel_id_1 = feature.attribute("obj_id")
                 except W2TLayerNotFound as e:
-                    self.cannotImportArea.show()
+                    self.cannotImportScrollArea.show()
                     self.cannotImportLabel.setText(
                         self.tr("The channel layer is missing in the project: {error}").format(
                             error=str(e)
@@ -222,7 +222,7 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
 
     @pyqtSlot()
     def on_importButton_clicked(self):
-        self.cannotImportArea.hide()
+        self.cannotImportScrollArea.hide()
 
         always_skip_invalid_codes = False
 
@@ -249,7 +249,7 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
         join_layer_id = self.settings.join_maintence_wastewaterstructure_layer.value()
         join_layer = QgsProject.instance().mapLayer(join_layer_id)
         if join_layer is None:
-            self.cannotImportArea.show()
+            self.cannotImportScrollArea.show()
             self.cannotImportLabel.setText(
                 self.tr("The join layer '{layer_id}' is missing in the project.")
             )
@@ -289,7 +289,7 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                     break
                                 f = section_at_id(fid)
                                 if f.isValid() is False:
-                                    self.cannotImportArea.show()
+                                    self.cannotImportScrollArea.show()
                                     self.cannotImportLabel.setText(
                                         self.tr(
                                             "Inspection {i} from manhole {c1} to {c2}"
@@ -306,7 +306,7 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                 reach_features.append(QgsFeature(f))
 
                             if len(reach_features) == 0:
-                                self.cannotImportArea.show()
+                                self.cannotImportScrollArea.show()
                                 self.cannotImportLabel.setText(
                                     self.tr(
                                         "Inspection {i} from manhole {c1} to {c2}"
@@ -359,7 +359,7 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                             # in case several sections in inspection data correspond to a single section in qgep data
                             # substract length from previous sections in inspection data
                             if not previous_section_imported:
-                                self.cannotImportArea.show()
+                                self.cannotImportScrollArea.show()
                                 self.cannotImportLabel.setText(
                                     self.tr(
                                         "Inspection {i} from manhole {c1} to {c2}"
@@ -425,7 +425,7 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                             ):  # add 50cm tolerance
                                                 break
                                             else:
-                                                self.cannotImportArea.show()
+                                                self.cannotImportScrollArea.show()
                                                 self.cannotImportLabel.setText(
                                                     self.tr(
                                                         "Inspection {i} from manhole {c1} to {c2}"
@@ -599,7 +599,7 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                                     + f"{_fields}"
                                                 )
                                                 logger.error(message)
-                                                self.cannotImportArea.show()
+                                                self.cannotImportScrollArea.show()
                                                 self.cannotImportLabel.setText(message)
                                                 raise InterruptedError("Import failed")
                                         logger.debug(
@@ -626,7 +626,7 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                         )
                                         + f"{_fields}"
                                     )
-                                    self.cannotImportArea.show()
+                                    self.cannotImportScrollArea.show()
                                     self.cannotImportLabel.setText(message)
                                     raise InterruptedError("Import failed")
 
@@ -656,7 +656,7 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                             + f"{_fields}"
                                         )
                                         logger.error(message)
-                                        self.cannotImportArea.show()
+                                        self.cannotImportScrollArea.show()
                                         self.cannotImportLabel.setText(message)
                                         raise InterruptedError("Import failed")
 
@@ -730,7 +730,7 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                                 + f"{_fields}"
                                             )
                                             logger.error(message)
-                                            self.cannotImportArea.show()
+                                            self.cannotImportScrollArea.show()
                                             self.cannotImportLabel.setText(message)
                                             raise InterruptedError("Import failed")
 
@@ -764,7 +764,7 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                         + f"{_fields}"
                                     )
                                     logger.error(message)
-                                    self.cannotImportArea.show()
+                                    self.cannotImportScrollArea.show()
                                     self.cannotImportLabel.setText(message)
                                     raise InterruptedError("Import failed")
 
