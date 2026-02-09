@@ -119,7 +119,6 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
     @pyqtSlot(int)
     def on_projectCombo_currentIndexChanged(self, idx):
         self.current_project_id = self.projectCombo.itemData(idx)
-        self.dateTimeEdit.setDateTime(self.projects[self.current_project_id].date)
         self.channelNameEdit.setText(self.projects[self.current_project_id].channel)
         self.sectionWidget.set_project_id(self.current_project_id)
 
