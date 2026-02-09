@@ -64,7 +64,12 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
         self.channelNameEdit.setFocus()
         self.cancel = False
 
-        self.data_path_line_edit.setText(data_path)
+        self.data_path_line_edit.setRelativeStorage(
+            self.data_path_line_edit.RelativeStorage.Absolute
+        )
+        self.data_path_line_edit.setStorageMode(self.data_path_line_edit.StorageMode.GetDirectory)
+
+        self.data_path_line_edit.setFilePath(data_path)
 
         self.meta_file_widget.setDefaultRoot(data_path)
         self.meta_file_widget.setReadOnly(True)
@@ -561,7 +566,7 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                             of["identifier"] = mf[1]
                                             sep = os.path.sep
                                             of["path_relative"] = of["path_relative"] = (
-                                                self.data_path_line_edit.text()
+                                                self.data_path_line_edit.filePath()
                                                 + f"{sep}Video{sep}Sec"
                                             )
                                             ok = file_layer.addFeature(of)
@@ -665,12 +670,12 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                         sep = os.path.sep
                                         if mf[0] == "picture":
                                             of["path_relative"] = (
-                                                self.data_path_line_edit.text()
+                                                self.data_path_line_edit.filePath()
                                                 + f"{sep}Picture{sep}Sec"
                                             )
                                         elif mf[0] == "video":
                                             of["path_relative"] = (
-                                                self.data_path_line_edit.text()
+                                                self.data_path_line_edit.filePath()
                                                 + f"{sep}Video{sep}Sec"
                                             )
                                         else:

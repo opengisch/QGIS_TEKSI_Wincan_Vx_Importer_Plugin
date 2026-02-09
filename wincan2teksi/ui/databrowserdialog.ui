@@ -124,9 +124,6 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="2" colspan="3">
-       <widget class="QLineEdit" name="data_path_line_edit"/>
-      </item>
       <item row="0" column="0">
        <widget class="QComboBox" name="projectCombo"/>
       </item>
@@ -137,23 +134,26 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="2">
-       <widget class="QgsFileWidget" name="pdf_path_widget" native="true">
-        <property name="useLink" stdset="0">
-         <bool>true</bool>
-        </property>
-        <property name="filter" stdset="0">
-         <string>*.pdf</string>
-        </property>
-       </widget>
+      <item row="1" column="2" colspan="3">
+       <widget class="QgsFileWidget" name="widget_3" native="true"/>
       </item>
-      <item row="2" column="2" colspan="2">
+      <item row="2" column="2" colspan="3">
        <widget class="QgsFileWidget" name="meta_file_widget" native="true">
         <property name="enabled">
          <bool>true</bool>
         </property>
         <property name="useLink" stdset="0">
          <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2" colspan="3">
+       <widget class="QgsFileWidget" name="pdf_path_widget" native="true">
+        <property name="useLink" stdset="0">
+         <bool>true</bool>
+        </property>
+        <property name="filter" stdset="0">
+         <string>*.pdf</string>
         </property>
        </widget>
       </item>
@@ -238,7 +238,7 @@
         <x>0</x>
         <y>0</y>
         <width>754</width>
-        <height>275</height>
+        <height>280</height>
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout_5">
