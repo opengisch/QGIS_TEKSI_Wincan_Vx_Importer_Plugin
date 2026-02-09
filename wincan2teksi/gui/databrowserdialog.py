@@ -146,6 +146,12 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
         for project in self.projects.values():
             if self.cancel:
                 break
+            # former cleanup to remove previous search results
+            for section in project.sections.values():
+                section.teksi_channel_id_1 = None
+                section.teksi_channel_id_2 = None
+                section.teksi_channel_id_3 = None
+
             for section in project.sections.values():
                 QCoreApplication.processEvents()
                 if self.cancel:
