@@ -174,12 +174,19 @@ class SectionWidget(QWidget, Ui_SectionWidget):
 
     @pyqtSlot()
     def on_sectionListWidget_itemSelectionChanged(self):
+        # Disconnect signals to avoid triggering updates while changing selection
+        # Use try-except because signals might not be connected (e.g., after previous disconnect/reconnect cycle)
         for selector, channel_id_slot in (
             (self.section_1_selector, self.set_qgep_channel_id1),
             (self.section_2_selector, self.set_qgep_channel_id2),
             (self.section_3_selector, self.set_qgep_channel_id3),
         ):
-            selector.feature_changed.disconnect(channel_id_slot)
+            try:
+                selector.feature_changed.disconnect(channel_id_slot)
+            except TypeError:
+                # Signal was not connected, which is fine - it means this isn't the first call
+                # or the connection was already removed
+                pass
             selector.clear()
         self.endNodeEdit.clear()
         self.pipeDiaEdit.clear()
