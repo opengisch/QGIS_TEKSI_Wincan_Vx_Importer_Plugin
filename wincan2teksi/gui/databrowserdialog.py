@@ -84,7 +84,14 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
         self.relationWidgetWrapper = None
         maintenance_layer = QgsProject.instance().mapLayer(self.settings.maintenance_layer.value())
         if maintenance_layer is not None:
-            widget_config = maintenance_layer.editFormConfig().widgetConfig("fk_operating_company")
+            organisation_layer_id = self.settings.organisation_layer.value()
+            widget_config = {
+                "Layer": organisation_layer_id,
+                "Key": "obj_id",
+                "Value": "identifier",
+                "AllowNull": True,
+                "OrderByValue": True,
+            }
             editor_context = QgsAttributeEditorContext()
             editor_context.setVectorLayerTools(iface.vectorLayerTools())
             self.relationWidgetWrapper = QgsGui.editorWidgetRegistry().create(
@@ -94,6 +101,7 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                 widget_config,
                 self.operatingCompanyComboBox,
                 self,
+                editor_context,
             )
 
         self.sectionWidget.finish_init(iface, self.projects)

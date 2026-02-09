@@ -75,6 +75,9 @@ class Settings:
             cls.file_layer = QgsSettingsEntryString(
                 "file_layer", settings_node, "od_file20160921105557083"
             )
+            cls.organisation_layer = QgsSettingsEntryString(
+                "organisation_layer", settings_node, "od_organisation20160212172933583"
+            )
 
             cls.vl_damage_channel_layer = QgsSettingsEntryString(
                 "vl_damage_channel_layer", settings_node, "vl_damage_channel_channel_damage_code"
