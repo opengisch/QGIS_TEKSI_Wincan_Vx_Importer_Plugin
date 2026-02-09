@@ -525,6 +525,8 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
         file_layer_id = Settings().file_layer.value()
         file_layer = QgsProject.instance().mapLayer(file_layer_id)
 
+        skip_missing_files = False
+
         try:
             with edit(join_layer):
                 with edit(file_layer):
@@ -569,6 +571,16 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                                 self.data_path_line_edit.filePath()
                                                 + f"{sep}Video{sep}Sec"
                                             )
+                                            # Check if file exists
+                                            full_path = os.path.join(of["path_relative"], mf[1])
+                                            continue_import, skip_missing_files = (
+                                                self.check_media_file_exists(
+                                                    full_path, skip_missing_files
+                                                )
+                                            )
+                                            if not continue_import:
+                                                self.hide_progress()
+                                                return
                                             ok = file_layer.addFeature(of)
                                             if ok:
                                                 logger.debug(
@@ -673,11 +685,31 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                                 self.data_path_line_edit.filePath()
                                                 + f"{sep}Picture{sep}Sec"
                                             )
+                                            # Check if file exists
+                                            full_path = os.path.join(of["path_relative"], mf[1])
+                                            continue_import, skip_missing_files = (
+                                                self.check_media_file_exists(
+                                                    full_path, skip_missing_files
+                                                )
+                                            )
+                                            if not continue_import:
+                                                self.hide_progress()
+                                                return
                                         elif mf[0] == "video":
                                             of["path_relative"] = (
                                                 self.data_path_line_edit.filePath()
                                                 + f"{sep}Video{sep}Sec"
                                             )
+                                            # Check if file exists
+                                            full_path = os.path.join(of["path_relative"], mf[1])
+                                            continue_import, skip_missing_files = (
+                                                self.check_media_file_exists(
+                                                    full_path, skip_missing_files
+                                                )
+                                            )
+                                            if not continue_import:
+                                                self.hide_progress()
+                                                return
                                         else:
                                             logger.error(
                                                 f"unknown media type {mf[0]} for file {mf[1]}"
@@ -779,6 +811,33 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
         self.progressBar.hide()
         self.cancelButton.hide()
         self.importButton.show()
+
+    def check_media_file_exists(self, file_path, skip_missing_files):
+        """Check if media file exists, prompt user if not.
+
+        Returns:
+            tuple: (continue_import, skip_future_checks)
+                continue_import: True to continue, False to stop
+                skip_future_checks: True to skip all future file checks
+        """
+        if skip_missing_files or os.path.exists(file_path):
+            return True, skip_missing_files
+
+        reply = QMessageBox.question(
+            self,
+            self.tr("Media file not found"),
+            self.tr("Media file does not exist:\n{file}\n\nDo you want to continue?").format(
+                file=file_path
+            ),
+            QMessageBox.Yes | QMessageBox.YesToAll | QMessageBox.No,
+        )
+
+        if reply == QMessageBox.No:
+            return False, skip_missing_files
+        elif reply == QMessageBox.YesToAll:
+            return True, True
+        else:  # Yes
+            return True, skip_missing_files
 
     def hide_progress(self):
         self.progressBar.hide()
