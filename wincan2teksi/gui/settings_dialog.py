@@ -2,7 +2,7 @@
 """
 /***************************************************************************
 
- QGIS Solothurn Locator Plugin
+ QGIS TEKSI Wincan Importer Plugin
  Copyright (C) 2019 Denis Rouzaud
 
  ***************************************************************************/
@@ -34,6 +34,7 @@ SETTINGS = (
     "maintenance_layer",
     "damage_layer",
     "file_layer",
+    "organisation_layer",
     "vl_damage_channel_layer",
     "vl_damage_single_class",
     "vl_wastewater_structure_structure_condition",
