@@ -55,7 +55,7 @@ Ui_DataBrowserDialog, _ = loadUiType(
 
 class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
     def __init__(self, iface: QgisInterface, data: WinCanData, data_path=""):
-        print(os.path.join(os.path.dirname(__file__), "..", "ui", "databrowserdialog.ui"))
+        logger.debug(os.path.join(os.path.dirname(__file__), "..", "ui", "databrowserdialog.ui"))
         QDialog.__init__(self)
         self.setupUi(self)
         self.settings = Settings()

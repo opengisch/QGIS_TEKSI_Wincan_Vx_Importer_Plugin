@@ -27,6 +27,8 @@
 
 from qgis.core import QgsEditError
 
+from wincan2teksi.core.utils import logger
+
 
 class edit(object):
     """
@@ -41,12 +43,12 @@ class edit(object):
         # allow combination of nested `with edit(layer)`
         # startEditing returns false in case of transaction groups
         if not self.layer.isEditable():
-            print("making {} editable".format(self.layer.id()))
+            logger.debug("making {} editable".format(self.layer.id()))
             assert self.layer.startEditing()
         return self.layer
 
     def __exit__(self, ex_type, ex_value, traceback):
-        print(
+        logger.debug(
             "exiting edit for layer {}: is editable: {} excep: {}({})".format(
                 self.layer.id(), self.layer.isEditable(), ex_type, ex_value
             )
@@ -55,7 +57,7 @@ class edit(object):
             # allow combination of nested `with edit(layer)`
             # in case of transaction groups, commit might have been achieved before
             if self.layer.isEditable():
-                print("committing changes")
+                logger.debug("committing changes")
                 if not self.layer.commitChanges():
                     raise QgsEditError(self.layer.commitErrors())
             return True
