@@ -99,7 +99,7 @@ class SectionTableModel(QAbstractTableModel):
     def setData(self, index, value, role=Qt.ItemDataRole.EditRole):
         if role == Qt.ItemDataRole.CheckStateRole and index.column() == Column["Number"]:
             s_id, section = self._sections[index.row()]
-            section.import_ = value == Qt.CheckState.Checked.value
+            section.import_ = value == Qt.CheckState.Checked
             self.dataChanged.emit(index, index, [role])
             return True
         elif role == Qt.ItemDataRole.EditRole:

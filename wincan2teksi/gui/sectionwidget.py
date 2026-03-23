@@ -267,11 +267,11 @@ class SectionWidget(QWidget, Ui_SectionWidget):
 
     @pyqtSlot()
     def on_checkAllButton_clicked(self):
-        self._section_model.set_all_check_state(Qt.CheckState.Checked.value)
+        self._section_model.set_all_check_state(Qt.CheckState.Checked)
 
     @pyqtSlot()
     def on_uncheckAllButton_clicked(self):
-        self._section_model.set_all_check_state(Qt.CheckState.Unchecked.value)
+        self._section_model.set_all_check_state(Qt.CheckState.Unchecked)
 
 
 """
