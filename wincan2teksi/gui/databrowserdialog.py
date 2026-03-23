@@ -87,6 +87,19 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
         if data.pdf_file:
             self.pdf_path_widget.setFilePath(data.pdf_file)
 
+        if data.pdf_file and not any(
+            s.pdf_page is not None for p in data.projects.values() for s in p.sections.values()
+        ):
+            try:
+                import pypdf  # noqa: F401
+            except ImportError:
+                info(
+                    self.tr(
+                        "pypdf is not installed. PDF page matching is not available.\n"
+                        "Install it with: pip install pypdf"
+                    )
+                )
+
         self.cannotImportScrollArea.hide()
         self.progressBar.setTextVisible(True)
         self.progressBar.hide()
