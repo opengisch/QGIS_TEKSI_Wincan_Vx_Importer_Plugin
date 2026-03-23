@@ -1,6 +1,6 @@
 # -----------------------------------------------------------
 #
-# QGIS Quick Finder Plugin
+# QGIS TEKSI Wincan Importer Plugin
 # Copyright (C) 2013 Denis Rouzaud
 #
 # -----------------------------------------------------------
