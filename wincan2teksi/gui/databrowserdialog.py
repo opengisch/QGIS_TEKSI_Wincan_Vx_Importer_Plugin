@@ -98,10 +98,7 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                 import pypdf  # noqa: F401
             except ImportError:
                 logger.warning(
-                    self.tr(
-                        "pypdf is not installed. PDF page matching is not available.\n"
-                        "Install it with: pip install pypdf"
-                    )
+                    self.tr("pypdf is not installed. PDF page matching is not available.")
                 )
 
         self.cannotImportScrollArea.hide()
