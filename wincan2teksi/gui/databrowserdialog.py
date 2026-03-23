@@ -51,6 +51,7 @@ from wincan2teksi.core.vsacode import (
 from wincan2teksi.core.layer_edit import edit
 from wincan2teksi.core.read_data import WinCanData
 from wincan2teksi.core.utils import info, logger
+from wincan2teksi.gui.settings_dialog import SettingsDialog
 
 Ui_DataBrowserDialog, _ = loadUiType(
     os.path.join(os.path.dirname(__file__), "..", "ui", "databrowserdialog.ui")
@@ -119,6 +120,7 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
 
         menu_bar = QMenuBar(self)
         tools_menu = menu_bar.addMenu(self.tr("Tools"))
+        tools_menu.addAction(self.tr("Settings..."), self._open_settings)
         tools_menu.addAction(self.tr("Open import logs folder"), self._open_import_logs_folder)
         self.layout().setMenuBar(menu_bar)
 
@@ -918,6 +920,9 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
         log_dir = self._get_import_log_dir()
         os.makedirs(log_dir, exist_ok=True)
         QDesktopServices.openUrl(QUrl.fromLocalFile(log_dir))
+
+    def _open_settings(self):
+        SettingsDialog(self).exec()
 
     def hide_progress(self):
         self.progressBar.hide()
