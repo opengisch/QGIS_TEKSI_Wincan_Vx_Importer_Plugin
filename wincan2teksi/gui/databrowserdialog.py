@@ -33,7 +33,7 @@ from datetime import datetime
 
 from qgis.PyQt.QtCore import pyqtSlot, QCoreApplication, QUrl, QStandardPaths
 from qgis.PyQt.QtGui import QDesktopServices
-from qgis.PyQt.QtWidgets import QDialog, QMessageBox, QPushButton
+from qgis.PyQt.QtWidgets import QDialog, QMenuBar, QMessageBox
 from qgis.PyQt.uic import loadUiType
 
 from qgis.core import QgsProject, QgsFeature, QgsFeatureRequest
@@ -117,9 +117,10 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
         for project in self.projects.values():
             self.projectCombo.addItem(project.name, project.pk)
 
-        self.openLogsButton = QPushButton(self.tr("Open import logs"))
-        self.openLogsButton.clicked.connect(self._open_import_logs_folder)
-        self.gridLayout.addWidget(self.openLogsButton, 6, 0)
+        menu_bar = QMenuBar(self)
+        tools_menu = menu_bar.addMenu(self.tr("Tools"))
+        tools_menu.addAction(self.tr("Open import logs folder"), self._open_import_logs_folder)
+        self.layout().setMenuBar(menu_bar)
 
         self.channelNameEdit.setText("")
         # self.on_searchButton_clicked()
