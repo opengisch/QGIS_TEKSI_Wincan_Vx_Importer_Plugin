@@ -555,6 +555,9 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
         file_layer_id = Settings().file_layer.value()
         file_layer = QgsProject.instance().mapLayer(file_layer_id)
 
+        wsl_layer_id = Settings().wastewater_structure_layer.value()
+        wsl = QgsProject.instance().mapLayer(wsl_layer_id)
+
         skip_missing_files = False
 
         try:
@@ -799,26 +802,26 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                     raise InterruptedError("Import failed")
 
                                 # get current reach
-                                rf = QgsFeature()
-                                layer_id = Settings().wastewater_structure_layer.value()
-                                wsl = QgsProject.instance().mapLayer(layer_id)
                                 if wsl is not None:
                                     request = QgsFeatureRequest().setFilterExpression(
                                         "\"obj_id\" = '{}'".format(ws_obj_id)
                                     )
-                                    rf = next(wsl.getFeatures(request))
-                                if rf.isValid():
-                                    # update structure condition if worse
-                                    old_level = structure_condition_2_damage_level(
-                                        rf["structure_condition"]
-                                    )
-                                    if old_level is None or old_level > "Z{}".format(
-                                        structure_condition
-                                    ):
-                                        rf["structure_condition"] = (
-                                            damage_level_2_structure_condition(structure_condition)
+                                    rf = next(wsl.getFeatures(request), QgsFeature())
+                                    if rf.isValid():
+                                        # update structure condition if worse
+                                        old_level = structure_condition_2_damage_level(
+                                            rf["structure_condition"]
                                         )
-                                        wsl.updateFeature(rf)
+                                        if old_level is None or old_level > "Z{}".format(
+                                            structure_condition
+                                        ):
+                                            rf["structure_condition"] = (
+                                                damage_level_2_structure_condition(
+                                                    structure_condition
+                                                )
+                                            )
+                                            with edit(wsl):
+                                                wsl.updateFeature(rf)
 
                                 i += 1
                                 self.progressBar.setValue(i)
