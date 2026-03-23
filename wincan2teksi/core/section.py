@@ -51,7 +51,10 @@ def find_section(channel, start_node, end_node):
 
     request = QgsFeatureRequest().setFilterExpression(request_text)
     feature = next(layer.getFeatures(request), QgsFeature())
-    # print requestText, feature.isValid()
+    if feature.isValid():
+        logger.debug(f"Found section: {feature.attribute('obj_id')} for {start_node} → {end_node}")
+    else:
+        logger.debug(f"No section found for {start_node} → {end_node}")
     return feature
 
 

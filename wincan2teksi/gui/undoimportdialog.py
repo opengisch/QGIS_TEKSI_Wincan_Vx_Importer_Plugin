@@ -152,6 +152,8 @@ class UndoImportDialog(QDialog):
         if reply != QMessageBox.StandardButton.Yes:
             return
 
+        logger.info(f"Starting undo: deleting {total} features")
+
         try:
             QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
             self._delete_features(features)
@@ -168,6 +170,8 @@ class UndoImportDialog(QDialog):
             os.remove(filepath)
         except OSError:
             pass
+
+        logger.info(f"Undo completed: deleted {total} features")
 
         QMessageBox.information(
             self,

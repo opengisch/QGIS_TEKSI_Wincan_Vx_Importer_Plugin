@@ -34,6 +34,7 @@ from qgis.core import QgsProject
 
 from wincan2teksi.core.settings import Settings
 from wincan2teksi.core.section import find_section, section_at_id
+from wincan2teksi.core.utils import logger
 from wincan2teksi.gui.featureselectorwidget import CanvasExtent
 from wincan2teksi.gui.sectionmodel import SectionTableModel, SectionFilterProxyModel
 
@@ -258,8 +259,12 @@ class SectionWidget(QWidget, Ui_SectionWidget):
             )
         if feature.isValid():
             section.teksi_channel_id_1 = feature.attribute("obj_id")
+            logger.debug(
+                f"Matched section {section.from_node} → {section.to_node} to {section.teksi_channel_id_1}"
+            )
         else:
             section.teksi_channel_id_1 = None
+            logger.debug(f"No match found for section {section.from_node} → {section.to_node}")
         self.update_status()
         # Refresh detail pane if this section is currently selected
         if self.section_id == s_id:

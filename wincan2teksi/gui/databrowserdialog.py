@@ -62,7 +62,7 @@ Ui_DataBrowserDialog, _ = loadUiType(
 
 class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
     def __init__(self, iface: QgisInterface, data: WinCanData, data_path=""):
-        logger.debug(os.path.join(os.path.dirname(__file__), "..", "ui", "databrowserdialog.ui"))
+        logger.debug(f"Initializing DataBrowserDialog with {len(data.projects)} project(s)")
         QDialog.__init__(self)
         self.setupUi(self)
         self.settings = Settings()
@@ -225,6 +225,8 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
         self.cancel = False
         i = 0
 
+        logger.info(f"Starting channel search (channel='{channel}', {c} sections)")
+
         # find sections
         for project in self.projects.values():
             if self.cancel:
@@ -285,6 +287,15 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                     return
                 self.progressBar.setValue(i)
                 i += 1
+        matched = sum(
+            1
+            for p in self.projects.values()
+            for s in p.sections.values()
+            if s.teksi_channel_id_1 is not None
+        )
+        total = sum(len(p.sections) for p in self.projects.values())
+        logger.info(f"Channel search completed: {matched}/{total} sections matched")
+
         self.progressBar.hide()
         self.cancelButton.hide()
         self.importButton.show()
@@ -329,6 +340,8 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
         self.importButton.hide()
         self.cancel = False
         i = 0
+
+        logger.info(f"Starting import of {c} sections")
 
         # initialize maintenance and damage layers and features
         maintenance_layer_id = self.settings.maintenance_layer.value()
@@ -484,7 +497,7 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                 distance_offset -= (
                                     self.projects[p_id].sections[offset_section_id].section_length
                                 )
-                                info(
+                                logger.debug(
                                     "using previous section: {} with distance offset {}".format(
                                         offset_section_id, distance_offset
                                     )
@@ -701,9 +714,6 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                                 self.cannotImportScrollArea.show()
                                                 self.cannotImportLabel.setText(message)
                                                 raise InterruptedError("Import failed")
-                                        logger.debug(
-                                            f"no video found for maintenance event (fid: {maintenance['obj_id']})"
-                                        )
 
                                 # write maintenance feature
                                 ok = maintenance_layer.addFeature(maintenance)
@@ -742,9 +752,7 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                     if ok:
                                         added_features[damage_layer.id()].append(damage["obj_id"])
                                         logger.debug(
-                                            "adding feature to damage layer (fid: {}): {}".format(
-                                                damage["obj_id"], "ok" if ok else "error"
-                                            )
+                                            f"adding feature to damage layer (fid: {damage['obj_id']}): ok"
                                         )
                                     else:
                                         _fields = ""
@@ -926,6 +934,8 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
         """
         if skip_missing_files or os.path.exists(file_path):
             return True, skip_missing_files
+
+        logger.warning(f"Media file not found: {file_path}")
 
         reply = QMessageBox.question(
             self,

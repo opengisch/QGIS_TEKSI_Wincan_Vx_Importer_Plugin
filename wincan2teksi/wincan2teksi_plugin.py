@@ -32,6 +32,7 @@ from qgis.gui import QgsRubberBand, QgisInterface
 
 from wincan2teksi.core.settings import Settings, PLUGIN_NAME
 from wincan2teksi.core.read_data import read_data
+from wincan2teksi.core.utils import logger
 from wincan2teksi.gui.databrowserdialog import DataBrowserDialog
 from wincan2teksi.gui.settings_dialog import SettingsDialog
 from pathlib import Path
@@ -106,12 +107,14 @@ class Wincan2Teksi(QObject):
         )
 
         if file_path:
+            logger.info(f"Opening Wincan inspection file: {file_path}")
             absolute_path = os.path.dirname(os.path.realpath(file_path))
             parent_path = os.path.abspath(os.path.join(absolute_path, os.pardir))
             self.settings.db3_path.setValue(absolute_path)
             try:
                 data = read_data(file_path)
             except Exception as e:
+                logger.error(f"Error reading Wincan file: {e}")
                 self.iface.messageBar().pushMessage(
                     "Wincan 2 TEKSI",
                     f"Error reading Wincan file: {e}",

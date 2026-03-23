@@ -70,6 +70,8 @@ def read_data(file: str) -> WinCanData:
     if not Path(file).exists():
         raise FileNotFoundError(f"File {file} does not exist.")
 
+    logger.info(f"Reading Wincan database: {file}")
+
     data = WinCanData()
     data.file = file
 
@@ -194,6 +196,7 @@ def read_data(file: str) -> WinCanData:
             logger.info(f"Found {len(project.sections)} sections in project {project.name}")
 
         data.projects = {project.pk: project for project in projects}
+        logger.info(f"Loaded {len(data.projects)} project(s) from {file}")
 
         if data.pdf_file:
             _parse_pdf_pages(data.pdf_file, data.projects)
