@@ -33,7 +33,9 @@ class QgisDebugHandler(logging.Handler):
         try:
             msg = self.format(record)
             QgsMessageLog.logMessage(
-                "{}: {}".format("Wincan2QGEP", msg), "Wincan TEKSI Importer", Qgis.MessageLevel.Info
+                "{}: {}".format("Wincan2TEKSI", msg),
+                "Wincan TEKSI Importer",
+                Qgis.MessageLevel.Info,
             )
         except Exception:
             pass
@@ -46,12 +48,16 @@ if DEBUG:
 
 
 def info(message: str, level: Qgis.MessageLevel = Qgis.MessageLevel.Info):
-    QgsMessageLog.logMessage("{}: {}".format("Wincan2QGEP", message), "Wincan2QGEP", level)
-    iface.messageBar().pushMessage("SoLocator", message, level)
+    QgsMessageLog.logMessage(
+        "{}: {}".format("Wincan2TEKSI", message), "Wincan TEKSI Importer", level
+    )
+    iface.messageBar().pushMessage("Wincan TEKSI Importer", message, level)
 
 
 def dbg_info(message: str):
     if DEBUG:
         QgsMessageLog.logMessage(
-            "{}: {}".format("Wincan2QGEP", message), "Wincan2QGEP", Qgis.MessageLevel.Info
+            "{}: {}".format("Wincan2TEKSI", message),
+            "Wincan TEKSI Importer",
+            Qgis.MessageLevel.Info,
         )
