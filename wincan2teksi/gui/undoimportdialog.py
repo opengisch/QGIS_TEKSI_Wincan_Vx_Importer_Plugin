@@ -30,6 +30,7 @@ import os
 
 from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtWidgets import (
+    QApplication,
     QDialog,
     QDialogButtonBox,
     QListWidget,
@@ -148,12 +149,15 @@ class UndoImportDialog(QDialog):
             return
 
         try:
+            QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
             self._delete_features(features)
         except Exception as e:
             QMessageBox.critical(
                 self, self.tr("Deletion failed"), self.tr("Error during deletion:\n{e}").format(e=e)
             )
             return
+        finally:
+            QApplication.restoreOverrideCursor()
 
         # Remove log file after successful deletion
         try:
