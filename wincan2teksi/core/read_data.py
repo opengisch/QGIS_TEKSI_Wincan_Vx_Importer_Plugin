@@ -83,6 +83,8 @@ def read_data(file: str) -> WinCanData:
             section.to_node = __read_table(
                 cursor, "NODE", f"OBJ_PK = '{section.to_node}' AND OBJ_Deleted IS NULL"
             )[0]["OBJ_Key"]
+            section.original_from_node = section.from_node
+            section.original_to_node = section.to_node
 
             logger.debug(
                 f"Found section: {section.name} (PK: {section.pk}) in project {project.name}"

@@ -24,18 +24,22 @@
 # ---------------------------------------------------------------------
 
 import os
+import re
 from qgis.PyQt.QtCore import pyqtSlot, Qt
-from qgis.PyQt.QtWidgets import QWidget, QHeaderView
+from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtWidgets import QWidget, QHeaderView, QMenu, QMessageBox
 from qgis.PyQt.uic import loadUiType
 
 from qgis.core import QgsProject
 
 from wincan2teksi.core.settings import Settings
-from wincan2teksi.core.section import section_at_id
+from wincan2teksi.core.section import find_section, section_at_id
 from wincan2teksi.gui.featureselectorwidget import CanvasExtent
 from wincan2teksi.gui.sectionmodel import SectionTableModel, SectionFilterProxyModel
 
 Ui_SectionWidget, _ = loadUiType(os.path.join(os.path.dirname(__file__), "../ui/sectionwidget.ui"))
+
+_search_icon = QIcon(os.path.join(os.path.dirname(__file__), "..", "icons", "magnifier13.svg"))
 
 
 class SectionWidget(QWidget, Ui_SectionWidget):
@@ -56,6 +60,8 @@ class SectionWidget(QWidget, Ui_SectionWidget):
             QHeaderView.ResizeMode.ResizeToContents
         )
         self.sectionTableView.verticalHeader().hide()
+        self.sectionTableView.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.sectionTableView.customContextMenuRequested.connect(self._show_context_menu)
 
         self.section_1_selector.feature_changed.connect(self.set_qgep_channel_id1)
         self.section_2_selector.feature_changed.connect(self.set_qgep_channel_id2)
@@ -196,6 +202,67 @@ class SectionWidget(QWidget, Ui_SectionWidget):
         self.addressEdit.setText(section.address)
 
         self.inspectionWidget.set_section(self.projectId, self.section_id)
+
+    def _show_context_menu(self, pos):
+        index = self.sectionTableView.indexAt(pos)
+        if not index.isValid():
+            return
+        source_index = self._proxy_model.mapToSource(index)
+        row = source_index.row()
+        col = source_index.column()
+        from wincan2teksi.gui.sectionmodel import Column
+
+        menu = QMenu(self)
+
+        match_action = menu.addAction(_search_icon, self.tr("Match section"))
+
+        edit_action = None
+        reset_action = None
+        if col in (Column["FromNode"], Column["ToNode"]):
+            menu.addSeparator()
+            edit_action = menu.addAction(self.tr("Edit"))
+            if self._section_model.is_edited(row, col):
+                reset_action = menu.addAction(self.tr("Reset to original"))
+
+        action = menu.exec(self.sectionTableView.viewport().mapToGlobal(pos))
+        if action == match_action:
+            self._match_section(row)
+        elif edit_action and action == edit_action:
+            self.sectionTableView.edit(index)
+        elif reset_action and action == reset_action:
+            self._section_model.reset_to_original(row, col)
+
+    def _match_section(self, source_row):
+        s_id = self._section_model.section_id_for_row(source_row)
+        if s_id is None or self.projectId is None:
+            return
+        section = self.projects[self.projectId].sections[s_id]
+        if section.teksi_channel_id_1 is not None:
+            reply = QMessageBox.question(
+                self,
+                self.tr("Section already matched"),
+                self.tr("This section is already matched. Do you want to search again?"),
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            )
+            if reply != QMessageBox.StandardButton.Yes:
+                return
+        channel = self.projects[self.projectId].channel
+        settings = Settings()
+        feature = find_section(channel, section.from_node, section.to_node)
+        if not feature.isValid() and settings.remove_trailing_chars.value():
+            feature = find_section(
+                channel,
+                re.sub(r"\D*$", "", section.from_node),
+                re.sub(r"\D*$", "", section.to_node),
+            )
+        if feature.isValid():
+            section.teksi_channel_id_1 = feature.attribute("obj_id")
+        else:
+            section.teksi_channel_id_1 = None
+        self.update_status()
+        # Refresh detail pane if this section is currently selected
+        if self.section_id == s_id:
+            self._on_selection_changed(None, None)
 
     @pyqtSlot()
     def on_checkAllButton_clicked(self):

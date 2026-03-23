@@ -1,5 +1,5 @@
 from qgis.PyQt.QtCore import QAbstractTableModel, QModelIndex, Qt, QSortFilterProxyModel
-from qgis.PyQt.QtGui import QColor
+from qgis.PyQt.QtGui import QColor, QFont
 
 
 Column = {"Number": 0, "FromNode": 1, "ToNode": 2}
@@ -51,7 +51,7 @@ class SectionTableModel(QAbstractTableModel):
 
         s_id, section = self._sections[index.row()]
 
-        if role == Qt.ItemDataRole.DisplayRole:
+        if role in (Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.EditRole):
             col = index.column()
             if col == Column["Number"]:
                 return str(section.counter)
@@ -65,16 +65,23 @@ class SectionTableModel(QAbstractTableModel):
 
         elif role == Qt.ItemDataRole.BackgroundRole:
             ok = section.teksi_channel_id_1 is not None or section.use_previous_section is True
-            if not ok:
-                ok = True
-                for inspection in section.inspections.values():
-                    if inspection.import_:
-                        ok = False
-                        break
             if ok:
                 return QColor(Qt.GlobalColor.white)
             else:
                 return QColor(255, 190, 190)
+
+        elif role == Qt.ItemDataRole.FontRole:
+            col = index.column()
+            edited = False
+            if col == Column["FromNode"]:
+                edited = section.from_node != section.original_from_node
+            elif col == Column["ToNode"]:
+                edited = section.to_node != section.original_to_node
+            if edited:
+                font = QFont()
+                font.setBold(True)
+                font.setItalic(True)
+                return font
 
         elif role == Qt.ItemDataRole.UserRole:
             return s_id
@@ -85,6 +92,8 @@ class SectionTableModel(QAbstractTableModel):
         flags = super().flags(index)
         if index.column() == Column["Number"]:
             flags |= Qt.ItemFlag.ItemIsUserCheckable
+        elif index.column() in (Column["FromNode"], Column["ToNode"]):
+            flags |= Qt.ItemFlag.ItemIsEditable
         return flags
 
     def setData(self, index, value, role=Qt.ItemDataRole.EditRole):
@@ -93,12 +102,46 @@ class SectionTableModel(QAbstractTableModel):
             section.import_ = value == Qt.CheckState.Checked.value
             self.dataChanged.emit(index, index, [role])
             return True
+        elif role == Qt.ItemDataRole.EditRole:
+            if not value or not value.strip():
+                return False
+            s_id, section = self._sections[index.row()]
+            col = index.column()
+            if col == Column["FromNode"]:
+                section.from_node = value.strip()
+            elif col == Column["ToNode"]:
+                section.to_node = value.strip()
+            else:
+                return False
+            self.dataChanged.emit(index, index, [role])
+            return True
         return False
 
     def section_id_for_row(self, row):
         if 0 <= row < len(self._sections):
             return self._sections[row][0]
         return None
+
+    def is_edited(self, row, col):
+        if 0 <= row < len(self._sections):
+            _, section = self._sections[row]
+            if col == Column["FromNode"]:
+                return section.from_node != section.original_from_node
+            elif col == Column["ToNode"]:
+                return section.to_node != section.original_to_node
+        return False
+
+    def reset_to_original(self, row, col):
+        if 0 <= row < len(self._sections):
+            _, section = self._sections[row]
+            if col == Column["FromNode"]:
+                section.from_node = section.original_from_node
+            elif col == Column["ToNode"]:
+                section.to_node = section.original_to_node
+            else:
+                return
+            index = self.index(row, col)
+            self.dataChanged.emit(index, index)
 
     def row_for_section_id(self, section_id):
         for row, (s_id, _) in enumerate(self._sections):

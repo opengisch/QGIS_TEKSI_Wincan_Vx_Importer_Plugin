@@ -32,6 +32,8 @@ class Section:
         self.flow_direction = flow_direction
         self.from_node = from_node
         self.to_node = to_node
+        self.original_from_node = from_node
+        self.original_to_node = to_node
         self.address = address
 
         self.counter = counter
