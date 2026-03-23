@@ -266,6 +266,23 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
     def on_importButton_clicked(self):
         self.cannotImportScrollArea.hide()
 
+        # Warn if some sections are unchecked
+        unchecked = sum(
+            1 for p in self.projects.values() for s in p.sections.values() if not s.import_
+        )
+        if unchecked:
+            reply = QMessageBox.warning(
+                self,
+                self.tr("Unchecked sections"),
+                self.tr(
+                    "{n} section(s) will not be imported because they are unchecked.\n\n"
+                    "Do you want to continue?"
+                ).format(n=unchecked),
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            )
+            if reply != QMessageBox.StandardButton.Yes:
+                return
+
         always_skip_invalid_codes = False
 
         # init progress bar
