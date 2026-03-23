@@ -2,6 +2,7 @@
 # coding: utf-8 -*-
 # ...existing code...
 from pathlib import Path
+import re
 import sqlite3
 
 from wincan2teksi.core.objects import Project, Section, Inspection, Observation
@@ -193,6 +194,95 @@ def read_data(file: str) -> WinCanData:
             logger.info(f"Found {len(project.sections)} sections in project {project.name}")
 
         data.projects = {project.pk: project for project in projects}
+
+        if data.pdf_file:
+            _parse_pdf_pages(data.pdf_file, data.projects)
+
         return data
     finally:
         conn.close()
+
+
+def _parse_pdf_pages(pdf_path: str, projects: dict) -> None:
+    """Parse the PDF report's table of contents to determine the starting
+    page number for each section, and store it on the Section objects."""
+    try:
+        import pypdf
+    except ImportError:
+        logger.warning(
+            "pypdf is not installed — PDF page numbers will not be available. "
+            "Install it with: pip install pypdf"
+        )
+        return
+
+    try:
+        reader = pypdf.PdfReader(pdf_path)
+    except Exception as e:
+        logger.warning(f"Could not read PDF {pdf_path}: {e}")
+        return
+
+    # Step 1: Extract TOC text from initial pages
+    toc_text = ""
+    for page_idx in range(min(len(reader.pages), 30)):
+        text = reader.pages[page_idx].extract_text() or ""
+        if "Table des matières" in text or re.search(r"Page\s+[A-Z]-\d+", text):
+            toc_text += text + "\n"
+        else:
+            break
+
+    if not toc_text:
+        logger.warning("Could not find table of contents in PDF")
+        return
+
+    # Step 2: Parse section entries from TOC
+    # Format: "Section: N; from - to  ...dots...  PAGE" possibly split across two lines
+    toc_entries = {}
+    matches = re.findall(
+        r"Section:\s*(\d+);[^\n]+\n[^\d\n]*(\d+)\s*$",
+        toc_text,
+        re.MULTILINE,
+    )
+    if not matches:
+        # Try single-line format
+        matches = re.findall(
+            r"Section:\s*(\d+);.*?(\d+)\s*$",
+            toc_text,
+            re.MULTILINE,
+        )
+    for counter_str, page_str in matches:
+        toc_entries[int(counter_str)] = int(page_str)
+
+    if not toc_entries:
+        logger.warning("Could not parse section entries from PDF table of contents")
+        return
+
+    # Step 3: Determine page offset
+    # Find the first content page (not TOC/legend) and its internal page number
+    offset = None
+    for page_idx in range(min(len(reader.pages), 30)):
+        text = reader.pages[page_idx].extract_text() or ""
+        if "Table des matières" in text:
+            continue
+        if re.search(r"Page\s+[A-Z]-\d+", text):
+            continue
+        m = re.search(r"\bPage\s+(\d+)\b", text)
+        if m:
+            internal_page = int(m.group(1))
+            offset = (page_idx + 1) - internal_page
+            break
+
+    if offset is None:
+        logger.warning("Could not determine PDF page offset")
+        return
+
+    logger.info(f"PDF page offset: {offset}, found {len(toc_entries)} section entries in TOC")
+
+    # Step 4: Assign page numbers to sections
+    for project in projects.values():
+        for section in project.sections.values():
+            if section.counter in toc_entries:
+                section.pdf_page = toc_entries[section.counter] + offset
+                logger.debug(
+                    f"Section {section.name} (counter={section.counter}): "
+                    f"PDF page {section.pdf_page}"
+                )

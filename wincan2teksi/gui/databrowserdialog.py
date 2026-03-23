@@ -382,7 +382,11 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                 mf["remark"] = ""
                                 mf["status"] = 2550  # vl_maintenance_event: accomplished
                                 mf["inspected_length"] = section.section_length
-                                mf["base_data"] = self.pdf_path_widget.filePath()
+                                pdf_path = self.pdf_path_widget.filePath()
+                                if section.pdf_page is not None:
+                                    mf["base_data"] = f"{pdf_path}#page={section.pdf_page}"
+                                else:
+                                    mf["base_data"] = pdf_path
                                 if self.relationWidgetWrapper is not None:
                                     mf["fk_operating_company"] = self.relationWidgetWrapper.value()
                                 if inspection.direction == 1:

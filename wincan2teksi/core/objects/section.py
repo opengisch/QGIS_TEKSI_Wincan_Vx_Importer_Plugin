@@ -37,6 +37,7 @@ class Section:
         self.address = address
 
         self.counter = counter
+        self.pdf_page = None
 
         # TODO: Check if these are missing
         self.section_use = None
