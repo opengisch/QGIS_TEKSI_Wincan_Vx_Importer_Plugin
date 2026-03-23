@@ -120,7 +120,7 @@ class Wincan2Teksi(QObject):
                 logger.error(f"Error reading Wincan file: {e}")
                 self.iface.messageBar().pushMessage(
                     "Wincan 2 TEKSI",
-                    f"Error reading Wincan file: {e}",
+                    self.tr("Error reading Wincan file: {error}").format(error=e),
                     level=Qgis.MessageLevel.Critical,
                 )
                 return
