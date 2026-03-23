@@ -257,31 +257,22 @@ def _parse_pdf_pages(pdf_path: str, projects: dict) -> None:
     # Try multiple patterns to handle different PDF text extraction layouts
     toc_entries = {}
 
-    # Pattern A: "Section: N; from - to" on one line, page number on next line
+    # Known section labels across languages:
+    # French: "Section", "Tronçon"  German: "Haltung", "Abschnitt"  English: "Section"
+    section_label = r"(?:Section|Tron[cç]on|Haltung|Abschnitt)"
+
+    # Pattern A: label on one line, page number alone on the next line
     matches = re.findall(
-        r"Section:\s*(\d+);[^\n]+\n[^\d\n]*(\d+)\s*$",
+        section_label + r":\s*(\d+);[^\n]+\n[^\d\n]*(\d+)\s*$",
         toc_text,
-        re.MULTILINE,
+        re.MULTILINE | re.IGNORECASE,
     )
     if not matches:
-        # Pattern B: "Section: N; ... PAGE" all on one line
+        # Pattern B: label and page number on the same line
         matches = re.findall(
-            r"Section:\s*(\d+);.*?(\d+)\s*$",
+            section_label + r":\s*(\d+);.*?(\d+)\s*$",
             toc_text,
-            re.MULTILINE,
-        )
-    if not matches:
-        # Pattern C: German "Haltung: N; ..." or "Abschnitt: N; ..."
-        matches = re.findall(
-            r"(?:Haltung|Abschnitt):\s*(\d+);[^\n]+\n[^\d\n]*(\d+)\s*$",
-            toc_text,
-            re.MULTILINE,
-        )
-    if not matches:
-        matches = re.findall(
-            r"(?:Haltung|Abschnitt):\s*(\d+);.*?(\d+)\s*$",
-            toc_text,
-            re.MULTILINE,
+            re.MULTILINE | re.IGNORECASE,
         )
 
     for counter_str, page_str in matches:
@@ -292,7 +283,8 @@ def _parse_pdf_pages(pdf_path: str, projects: dict) -> None:
         sample_lines = [
             line
             for line in toc_text.split("\n")
-            if re.search(r"\d+;", line) or "ection" in line.lower()
+            if re.search(r"\d+;", line)
+            or re.search(r"ection|ron[cç]on|altung|bschnitt", line, re.IGNORECASE)
         ][:5]
         logger.warning(
             "Could not parse section entries from PDF table of contents. Sample lines: %s",
