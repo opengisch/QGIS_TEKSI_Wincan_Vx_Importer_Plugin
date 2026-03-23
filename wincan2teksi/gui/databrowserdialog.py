@@ -27,6 +27,7 @@
 
 import re
 import os
+from collections import defaultdict
 
 from qgis.PyQt.QtCore import pyqtSlot, QCoreApplication
 from qgis.PyQt.QtWidgets import QDialog, QMessageBox
@@ -559,6 +560,7 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
         wsl = QgsProject.instance().mapLayer(wsl_layer_id)
 
         skip_missing_files = False
+        added_features = defaultdict(list)
 
         try:
             with edit(join_layer):
@@ -615,6 +617,7 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                                 raise InterruptedError("Import cancelled by user")
                                             ok = file_layer.addFeature(of)
                                             if ok:
+                                                added_features[file_layer.id()].append(of["obj_id"])
                                                 logger.debug(
                                                     f"adding feature to file layer (fid: {of['obj_id']}): ok"
                                                 )
@@ -642,6 +645,9 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                 # write maintenance feature
                                 ok = maintenance_layer.addFeature(maintenance)
                                 if ok:
+                                    added_features[maintenance_layer.id()].append(
+                                        maintenance["obj_id"]
+                                    )
                                     logger.debug(
                                         "adding feature to maintenance layer (fid: {}): ok".format(
                                             maintenance["obj_id"]
@@ -671,6 +677,7 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                 for k, damage in enumerate(damages):
                                     ok = damage_layer.addFeature(damage)
                                     if ok:
+                                        added_features[damage_layer.id()].append(damage["obj_id"])
                                         logger.debug(
                                             "adding feature to damage layer (fid: {}): {}".format(
                                                 damage["obj_id"], "ok" if ok else "error"
@@ -745,6 +752,7 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                         ok = file_layer.addFeature(of)
 
                                         if ok:
+                                            added_features[file_layer.id()].append(of["obj_id"])
                                             logger.debug(
                                                 "adding media to file layer (fid: {}): ok".format(
                                                     of["obj_id"]
@@ -779,6 +787,7 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                 jf["fk_maintenance_event"] = maintenance["obj_id"]
                                 ok = join_layer.addFeature(jf)
                                 if ok:
+                                    added_features[join_layer.id()].append(jf["obj_id"])
                                     logger.debug(
                                         "adding feature to join layer (fid: {}): ok".format(
                                             jf["obj_id"]
@@ -832,6 +841,11 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
             self.cancelButton.hide()
             self.importButton.show()
             return
+
+        self.added_features = dict(added_features)
+        for layer_id, obj_ids in self.added_features.items():
+            layer_name = QgsProject.instance().mapLayer(layer_id).name()
+            logger.info(f"Added {len(obj_ids)} features to {layer_name}")
 
         self.progressBar.hide()
         self.cancelButton.hide()
