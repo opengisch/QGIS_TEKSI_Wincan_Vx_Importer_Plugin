@@ -32,8 +32,8 @@ from collections import defaultdict
 from datetime import datetime
 
 from qgis.PyQt.QtCore import pyqtSlot, QCoreApplication, QUrl, QStandardPaths
-from qgis.PyQt.QtGui import QDesktopServices
-from qgis.PyQt.QtWidgets import QDialog, QMenuBar, QMessageBox
+from qgis.PyQt.QtGui import QAction, QDesktopServices
+from qgis.PyQt.QtWidgets import QDialog, QGroupBox, QMenuBar, QMessageBox, QVBoxLayout
 from qgis.PyQt.uic import loadUiType
 
 from qgis.core import QgsExpressionContextUtils, QgsProject, QgsFeature, QgsFeatureRequest
@@ -51,6 +51,7 @@ from wincan2teksi.core.vsacode import (
 from wincan2teksi.core.layer_edit import edit
 from wincan2teksi.core.read_data import WinCanData
 from wincan2teksi.core.utils import info, logger
+from wincan2teksi.gui.logs_widget import LogsWidget
 from wincan2teksi.gui.settings_dialog import SettingsDialog
 from wincan2teksi.gui.undoimportdialog import UndoImportDialog
 
@@ -132,11 +133,27 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
         for project in self.projects.values():
             self.projectCombo.addItem(project.name, project.pk)
 
+        # Logs widget
+        self._logs_group_box = QGroupBox(self.tr("Logs"), self)
+        self._logs_group_box.setLayout(QVBoxLayout())
+        self._logs_widget = LogsWidget(self)
+        self._logs_group_box.layout().addWidget(self._logs_widget)
+        self.layout().addWidget(self._logs_group_box, 9, 0, 1, 3)
+        self._logs_group_box.setVisible(self.settings.show_logs.value())
+
         menu_bar = QMenuBar(self)
         tools_menu = menu_bar.addMenu(self.tr("Tools"))
         tools_menu.addAction(self.tr("Settings..."), self._open_settings)
         tools_menu.addAction(self.tr("Undo import..."), self._open_undo_import)
         tools_menu.addAction(self.tr("Open import logs folder"), self._open_import_logs_folder)
+
+        view_menu = menu_bar.addMenu(self.tr("View"))
+        self._toggle_logs_action = QAction(self.tr("Show Logs"), self)
+        self._toggle_logs_action.setCheckable(True)
+        self._toggle_logs_action.setChecked(self.settings.show_logs.value())
+        self._toggle_logs_action.triggered.connect(self._toggle_logs)
+        view_menu.addAction(self._toggle_logs_action)
+
         self.layout().setMenuBar(menu_bar)
 
         self.channelNameEdit.setText("")
@@ -971,6 +988,14 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
     def _open_undo_import(self):
         log_dir = self._get_import_log_dir()
         UndoImportDialog(log_dir, self).exec()
+
+    def _toggle_logs(self, checked):
+        self.settings.show_logs.setValue(checked)
+        self._logs_group_box.setVisible(checked)
+
+    def close(self):
+        self._logs_widget.close()
+        super().close()
 
     def hide_progress(self):
         self.progressBar.hide()

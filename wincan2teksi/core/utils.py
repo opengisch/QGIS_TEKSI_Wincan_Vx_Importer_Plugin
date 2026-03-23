@@ -15,7 +15,9 @@
 
 from qgis.core import Qgis, QgsMessageLog
 from qgis.utils import iface
+from qgis.PyQt.QtCore import QObject, pyqtSignal
 import logging
+from logging import LogRecord
 
 
 DEBUG = True
@@ -39,6 +41,23 @@ class QgisDebugHandler(logging.Handler):
             )
         except Exception:
             pass
+
+
+class LoggingBridge(logging.Handler, QObject):
+    loggedLine = pyqtSignal(LogRecord, str)
+
+    def __init__(self, level=logging.NOTSET, excluded_modules=None):
+        QObject.__init__(self)
+        logging.Handler.__init__(self, level)
+        self.formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(name)s - %(message)s")
+        self.excluded_modules = excluded_modules or []
+
+    def filter(self, record):
+        return record.name not in self.excluded_modules
+
+    def emit(self, record):
+        log_entry = self.format(record)
+        self.loggedLine.emit(record, log_entry)
 
 
 if DEBUG:

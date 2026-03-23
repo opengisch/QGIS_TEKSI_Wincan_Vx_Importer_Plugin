@@ -95,4 +95,6 @@ class Settings:
 
             cls.import_log_dir = QgsSettingsEntryString("import_log_dir", settings_node, "")
 
+            cls.show_logs = QgsSettingsEntryBool("show_logs", settings_node, False)
+
         return cls.instance
