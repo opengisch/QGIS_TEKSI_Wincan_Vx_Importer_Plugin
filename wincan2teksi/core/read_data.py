@@ -80,116 +80,119 @@ def read_data(file: str) -> WinCanData:
         logger.warning(f"Meta file {meta_path} does not exist.")
     else:
         data.meta_file = str(meta_path)
-        conn = sqlite3.connect(meta_path)
-        cursor = conn.cursor()
-        logger.info(f"Read meta file: {meta_path}")
-        operators = __read_table(cursor, "OPERATOR")
+        with sqlite3.connect(meta_path) as meta_conn:
+            meta_cursor = meta_conn.cursor()
+            logger.info(f"Read meta file: {meta_path}")
+            operators = __read_table(meta_cursor, "OPERATOR")
 
     conn = sqlite3.connect(file_path)
-    cursor = conn.cursor()
-
-    pdf_path = file_path.parent.parent / "Misc" / "Docu" / (file_path.stem + ".pdf")
-    if not pdf_path.exists():
-        logger.warning(f"PDF file {pdf_path} does not exist.")
-    else:
-        data.pdf_file = str(pdf_path)
-
     try:
-        project_data = __read_table(cursor, "PROJECT", extra_condition="PRJ_Deleted IS NULL")
-    except sqlite3.OperationalError as e:
-        raise InvalidProjectFile(f"Invalid project file: {file_path}") from e
+        cursor = conn.cursor()
 
-    projects = [Project.from_dict(data) for data in project_data]
+        pdf_path = file_path.parent.parent / "Misc" / "Docu" / (file_path.stem + ".pdf")
+        if not pdf_path.exists():
+            logger.warning(f"PDF file {pdf_path} does not exist.")
+        else:
+            data.pdf_file = str(pdf_path)
 
-    for project in projects:
-        logger.info(f"Processing project: {project.name} (PK: {project.pk})")
-        sections = __read_table(
-            cursor,
-            "SECTION",
-            conditions={"OBJ_Project_FK": project.pk},
-            extra_condition="OBJ_Deleted IS NULL",
-        )
-        for section_data in sections:
-            section = Section.from_dict(section_data)
-            from_nodes = __read_table(
+        try:
+            project_data = __read_table(cursor, "PROJECT", extra_condition="PRJ_Deleted IS NULL")
+        except sqlite3.OperationalError as e:
+            raise InvalidProjectFile(f"Invalid project file: {file_path}") from e
+
+        projects = [Project.from_dict(data) for data in project_data]
+
+        for project in projects:
+            logger.info(f"Processing project: {project.name} (PK: {project.pk})")
+            sections = __read_table(
                 cursor,
-                "NODE",
-                conditions={"OBJ_PK": section.from_node},
+                "SECTION",
+                conditions={"OBJ_Project_FK": project.pk},
                 extra_condition="OBJ_Deleted IS NULL",
             )
-            to_nodes = __read_table(
-                cursor,
-                "NODE",
-                conditions={"OBJ_PK": section.to_node},
-                extra_condition="OBJ_Deleted IS NULL",
-            )
-            if not from_nodes or not to_nodes:
-                logger.warning(
-                    f"Missing node data for section {section.name} (PK: {section.pk}), skipping"
-                )
-                continue
-            section.from_node = from_nodes[0]["OBJ_Key"]
-            section.to_node = to_nodes[0]["OBJ_Key"]
-            section.original_from_node = section.from_node
-            section.original_to_node = section.to_node
-
-            logger.debug(
-                f"Found section: {section.name} (PK: {section.pk}) in project {project.name}"
-            )
-
-            inspections = __read_table(
-                cursor,
-                "SECINSP",
-                conditions={"INS_Section_FK": section.pk},
-                extra_condition="INS_Deleted IS NULL",
-            )
-            if not inspections:
-                logger.warning(
-                    f"No inspections found for section {section.name} (PK: {section.pk}) in project {project.name}"
-                )
-                continue
-            for inspection_data in inspections:
-                inspection = Inspection.from_dict(inspection_data)
-                logger.debug(
-                    f"Found inspection: {inspection.name} (PK: {inspection.pk}) in section {section.name}"
-                )
-                if operators:
-                    for operator in operators:
-                        if operator["OP_PK"] == inspection.operator:
-                            # using OP_Key as OP_Name1 seems to be wrongly filled in AITV data
-                            inspection.operator = operator["OP_Key"]
-
-                observations = __read_table(
+            for section_data in sections:
+                section = Section.from_dict(section_data)
+                from_nodes = __read_table(
                     cursor,
-                    "SECOBS",
-                    conditions={"OBS_Inspection_FK": inspection.pk},
-                    extra_condition="OBS_Deleted IS NULL",
+                    "NODE",
+                    conditions={"OBJ_PK": section.from_node},
+                    extra_condition="OBJ_Deleted IS NULL",
                 )
-                if not observations:
+                to_nodes = __read_table(
+                    cursor,
+                    "NODE",
+                    conditions={"OBJ_PK": section.to_node},
+                    extra_condition="OBJ_Deleted IS NULL",
+                )
+                if not from_nodes or not to_nodes:
                     logger.warning(
-                        f"No observations found for inspection {inspection.name} (PK: {inspection.pk}) in section {section.name}"
+                        f"Missing node data for section {section.name} (PK: {section.pk}), skipping"
                     )
                     continue
-                for observation_data in observations:
-                    observation = Observation.from_dict(observation_data)
-                    logger.debug(
-                        f"Found observation in inspection {inspection.name} (PK: {inspection.pk})"
-                    )
-                    mmfiles = __read_table(
-                        cursor,
-                        "SECOBSMM",
-                        conditions={"OMM_Observation_FK": observation.pk},
-                        extra_condition="OMM_Deleted IS NULL",
-                    )
-                    for mmfile in mmfiles:
-                        if mmfile["OMM_Type"] in ("PI1", "PI2"):
-                            observation.mmfiles.append(("picture", mmfile["OMM_FileName"]))
-                        else:
-                            observation.mmfiles.append(("video", mmfile["OMM_FileName"]))
-                    inspection.add_observation(observation)
-                section.add_inspection(inspection)
-            project.add_section(section)
-        logger.info(f"Found {len(project.sections)} sections in project {project.name}")
+                section.from_node = from_nodes[0]["OBJ_Key"]
+                section.to_node = to_nodes[0]["OBJ_Key"]
+                section.original_from_node = section.from_node
+                section.original_to_node = section.to_node
 
-    data.projects = {project.pk: project for project in projects}
-    return data
+                logger.debug(
+                    f"Found section: {section.name} (PK: {section.pk}) in project {project.name}"
+                )
+
+                inspections = __read_table(
+                    cursor,
+                    "SECINSP",
+                    conditions={"INS_Section_FK": section.pk},
+                    extra_condition="INS_Deleted IS NULL",
+                )
+                if not inspections:
+                    logger.warning(
+                        f"No inspections found for section {section.name} (PK: {section.pk}) in project {project.name}"
+                    )
+                    continue
+                for inspection_data in inspections:
+                    inspection = Inspection.from_dict(inspection_data)
+                    logger.debug(
+                        f"Found inspection: {inspection.name} (PK: {inspection.pk}) in section {section.name}"
+                    )
+                    if operators:
+                        for operator in operators:
+                            if operator["OP_PK"] == inspection.operator:
+                                # using OP_Key as OP_Name1 seems to be wrongly filled in AITV data
+                                inspection.operator = operator["OP_Key"]
+
+                    observations = __read_table(
+                        cursor,
+                        "SECOBS",
+                        conditions={"OBS_Inspection_FK": inspection.pk},
+                        extra_condition="OBS_Deleted IS NULL",
+                    )
+                    if not observations:
+                        logger.warning(
+                            f"No observations found for inspection {inspection.name} (PK: {inspection.pk}) in section {section.name}"
+                        )
+                        continue
+                    for observation_data in observations:
+                        observation = Observation.from_dict(observation_data)
+                        logger.debug(
+                            f"Found observation in inspection {inspection.name} (PK: {inspection.pk})"
+                        )
+                        mmfiles = __read_table(
+                            cursor,
+                            "SECOBSMM",
+                            conditions={"OMM_Observation_FK": observation.pk},
+                            extra_condition="OMM_Deleted IS NULL",
+                        )
+                        for mmfile in mmfiles:
+                            if mmfile["OMM_Type"] in ("PI1", "PI2"):
+                                observation.mmfiles.append(("picture", mmfile["OMM_FileName"]))
+                            else:
+                                observation.mmfiles.append(("video", mmfile["OMM_FileName"]))
+                        inspection.add_observation(observation)
+                    section.add_inspection(inspection)
+                project.add_section(section)
+            logger.info(f"Found {len(project.sections)} sections in project {project.name}")
+
+        data.projects = {project.pk: project for project in projects}
+        return data
+    finally:
+        conn.close()
