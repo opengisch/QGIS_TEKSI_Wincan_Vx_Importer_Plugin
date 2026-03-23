@@ -281,11 +281,26 @@ def _parse_pdf_pages(pdf_path: str, projects: dict) -> None:
     logger.info(f"PDF page offset: {offset}, found {len(toc_entries)} section entries in TOC")
 
     # Step 4: Assign page numbers to sections
+    matched = 0
+    unmatched = []
     for project in projects.values():
         for section in project.sections.values():
             if section.counter in toc_entries:
                 section.pdf_page = toc_entries[section.counter] + offset
+                matched += 1
                 logger.debug(
                     f"Section {section.name} (counter={section.counter}): "
                     f"PDF page {section.pdf_page}"
                 )
+            else:
+                unmatched.append(section.name)
+                logger.warning(
+                    f"Section {section.name} (counter={section.counter}): "
+                    f"no matching entry in PDF table of contents"
+                )
+    if unmatched:
+        logger.warning(
+            f"{len(unmatched)} section(s) could not be matched to a PDF page: "
+            f"{', '.join(unmatched)}"
+        )
+    logger.info(f"PDF page matching: {matched} matched, {len(unmatched)} unmatched")
