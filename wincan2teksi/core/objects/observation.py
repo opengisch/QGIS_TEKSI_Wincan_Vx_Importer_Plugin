@@ -1,3 +1,8 @@
+def _format_obs_value(quantity, unit):
+    parts = [str(v) for v in (quantity, unit) if v is not None]
+    return " ".join(parts) if parts else None
+
+
 class Observation:
     def __init__(
         self,
@@ -44,9 +49,9 @@ class Observation:
             time=data["OBS_TimeCtr"],
             clock_position_1=data["OBS_ClockPos1"],
             clock_position_2=data["OBS_ClockPos2"],
-            obs_value_1=f"{data['OBS_Q1_Value']} {data['OBS_U1_Value']}",
-            obs_value_2=f"{data['OBS_Q2_Value']} {data['OBS_U2_Value']}",
-            obs_value_3=f"{data['OBS_Q3_Value']} {data['OBS_U3_Value']}",
+            obs_value_1=_format_obs_value(data["OBS_Q1_Value"], data["OBS_U1_Value"]),
+            obs_value_2=_format_obs_value(data["OBS_Q2_Value"], data["OBS_U2_Value"]),
+            obs_value_3=_format_obs_value(data["OBS_Q3_Value"], data["OBS_U3_Value"]),
             rate=data["OBS_RateValue"],
             memo=data["OBS_Memo"],
         )
