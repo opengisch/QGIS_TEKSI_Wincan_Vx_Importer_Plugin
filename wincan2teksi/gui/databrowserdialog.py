@@ -2,7 +2,7 @@
 #
 # #-----------------------------------------------------------
 #
-# QGIS wincan 2 QGEP Plugin
+# QGIS wincan 2 TEKSI Plugin
 # Copyright (C) 2016 Denis Rouzaud
 #
 # -----------------------------------------------------------
@@ -36,7 +36,7 @@ from qgis.PyQt.QtGui import QDesktopServices
 from qgis.PyQt.QtWidgets import QDialog, QMenuBar, QMessageBox
 from qgis.PyQt.uic import loadUiType
 
-from qgis.core import QgsProject, QgsFeature, QgsFeatureRequest
+from qgis.core import QgsExpressionContextUtils, QgsProject, QgsFeature, QgsFeatureRequest
 from qgis.gui import QgsGui, QgsAttributeEditorContext, QgisInterface
 
 from wincan2teksi.core.settings import Settings
@@ -52,6 +52,7 @@ from wincan2teksi.core.layer_edit import edit
 from wincan2teksi.core.read_data import WinCanData
 from wincan2teksi.core.utils import info, logger
 from wincan2teksi.gui.settings_dialog import SettingsDialog
+from wincan2teksi.gui.undoimportdialog import UndoImportDialog
 
 Ui_DataBrowserDialog, _ = loadUiType(
     os.path.join(os.path.dirname(__file__), "..", "ui", "databrowserdialog.ui")
@@ -121,6 +122,7 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
         menu_bar = QMenuBar(self)
         tools_menu = menu_bar.addMenu(self.tr("Tools"))
         tools_menu.addAction(self.tr("Settings..."), self._open_settings)
+        tools_menu.addAction(self.tr("Undo import..."), self._open_undo_import)
         tools_menu.addAction(self.tr("Open import logs folder"), self._open_import_logs_folder)
         self.layout().setMenuBar(menu_bar)
 
@@ -907,7 +909,11 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
         os.makedirs(log_dir, exist_ok=True)
         timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
         log_file = os.path.join(log_dir, f"import_{timestamp}.json")
-        data = {"timestamp": datetime.now().isoformat(), "features": {}}
+        data = {
+            "timestamp": datetime.now().isoformat(),
+            "user": QgsExpressionContextUtils.globalScope().variable("user_full_name") or "",
+            "features": {},
+        }
         for layer_id, obj_ids in added_features.items():
             layer = QgsProject.instance().mapLayer(layer_id)
             layer_name = layer.name() if layer else layer_id
@@ -923,6 +929,10 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
 
     def _open_settings(self):
         SettingsDialog(self).exec()
+
+    def _open_undo_import(self):
+        log_dir = self._get_import_log_dir()
+        UndoImportDialog(log_dir, self).exec()
 
     def hide_progress(self):
         self.progressBar.hide()
