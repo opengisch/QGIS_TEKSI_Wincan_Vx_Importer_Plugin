@@ -398,11 +398,11 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                     self.cannotImportLabel.setText(
                                         self.tr(
                                             "Inspection {i} from manhole {c1} to {c2}"
-                                            " has an non-existent channel assigned.".format(
-                                                i=section.counter,
-                                                c1=section.from_node,
-                                                c2=section.to_node,
-                                            )
+                                            " has an non-existent channel assigned."
+                                        ).format(
+                                            i=section.counter,
+                                            c1=section.from_node,
+                                            c2=section.to_node,
                                         )
                                     )
                                     self.sectionWidget.select_section(s_id)
@@ -415,11 +415,11 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                 self.cannotImportLabel.setText(
                                     self.tr(
                                         "Inspection {i} from manhole {c1} to {c2}"
-                                        " has no channel assigned.".format(
-                                            i=section.counter,
-                                            c1=section.from_node,
-                                            c2=section.to_node,
-                                        )
+                                        " has no channel assigned."
+                                    ).format(
+                                        i=section.counter,
+                                        c1=section.from_node,
+                                        c2=section.to_node,
                                     )
                                 )
                                 self.sectionWidget.select_section(s_id)
@@ -472,11 +472,11 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                 self.cannotImportLabel.setText(
                                     self.tr(
                                         "Inspection {i} from manhole {c1} to {c2}"
-                                        " uses previous channel, but it is not defined.".format(
-                                            i=section.counter,
-                                            c1=section.from_node,
-                                            c2=section.to_node,
-                                        )
+                                        " uses previous channel, but it is not defined."
+                                    ).format(
+                                        i=section.counter,
+                                        c1=section.from_node,
+                                        c2=section.to_node,
                                     )
                                 )
                                 self.sectionWidget.select_section(s_id)
@@ -539,11 +539,11 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                                     self.tr(
                                                         "Inspection {i} from manhole {c1} to {c2}"
                                                         " has observations further than the length"
-                                                        " of the assigned channels.".format(
-                                                            i=section.counter,
-                                                            c1=section.from_node,
-                                                            c2=section.to_node,
-                                                        )
+                                                        " of the assigned channels."
+                                                    ).format(
+                                                        i=section.counter,
+                                                        c1=section.from_node,
+                                                        c2=section.to_node,
                                                     )
                                                 )
                                                 self.sectionWidget.select_section(s_id)
