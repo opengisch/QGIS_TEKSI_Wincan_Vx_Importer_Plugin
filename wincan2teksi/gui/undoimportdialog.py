@@ -229,9 +229,7 @@ class UndoImportDialog(QDialog):
             return
         layer, obj_ids = plan[index]
         with edit(layer):
-            # Open remaining layers first (deepest nesting = last layer)
-            self._delete_nested(plan, index + 1)
-            # Now delete features from this layer
+            # Delete features from this layer first (dependents before parents)
             for obj_id in obj_ids:
                 request = QgsFeatureRequest().setFilterExpression(
                     "\"obj_id\" = '{}'".format(obj_id.replace("'", "''"))
@@ -244,3 +242,5 @@ class UndoImportDialog(QDialog):
                             )
                         )
                     logger.debug(f"Deleted feature {obj_id} from {layer.name()}")
+            # Then open remaining layers (parents deleted after dependents)
+            self._delete_nested(plan, index + 1)
