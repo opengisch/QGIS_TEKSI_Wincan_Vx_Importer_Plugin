@@ -151,4 +151,4 @@ class ObservationTable(QTableWidget):
                     True if item.checkState() == Qt.CheckState.Checked else False
                 )
             else:
-                raise
+                raise ValueError(f"Unknown data column: {data_column}")
