@@ -498,12 +498,13 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                         self.tr("Invalid damage data"),
                                         self.tr(
                                             "Inspection {i} from manhole {c1} to {c2} has invalid damage code or level.\n"
-                                            f"{message}\n"
-                                            "Insert without value?".format(
-                                                i=section.counter,
-                                                c1=section.from_node,
-                                                c2=section.to_node,
-                                            )
+                                            "{message}\n"
+                                            "Insert without value?"
+                                        ).format(
+                                            i=section.counter,
+                                            c1=section.from_node,
+                                            c2=section.to_node,
+                                            message=message,
                                         ),
                                         QMessageBox.Yes | QMessageBox.YesToAll | QMessageBox.No,
                                     )
