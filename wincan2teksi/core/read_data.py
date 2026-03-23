@@ -7,7 +7,10 @@ import sqlite3
 
 from wincan2teksi.core.objects import Project, Section, Inspection, Observation
 from wincan2teksi.core.exceptions import InvalidProjectFile
-from wincan2teksi.core.utils import logger
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 # codes which should not be imported by default
 SkipCode = "BCD"

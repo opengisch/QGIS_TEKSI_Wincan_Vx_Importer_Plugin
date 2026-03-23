@@ -50,10 +50,13 @@ from wincan2teksi.core.vsacode import (
 )
 from wincan2teksi.core.layer_edit import edit
 from wincan2teksi.core.read_data import WinCanData
-from wincan2teksi.core.utils import info, logger
 from wincan2teksi.gui.logs_widget import LogsWidget
 from wincan2teksi.gui.settings_dialog import SettingsDialog
 from wincan2teksi.gui.undoimportdialog import UndoImportDialog
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 Ui_DataBrowserDialog, _ = loadUiType(
     os.path.join(os.path.dirname(__file__), "..", "ui", "databrowserdialog.ui")
@@ -94,7 +97,7 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
             try:
                 import pypdf  # noqa: F401
             except ImportError:
-                info(
+                logger.warning(
                     self.tr(
                         "pypdf is not installed. PDF page matching is not available.\n"
                         "Install it with: pip install pypdf"

@@ -19,7 +19,7 @@ from qgis.PyQt.QtWidgets import (
 )
 from qgis.PyQt.uic import loadUiType
 
-from wincan2teksi.core.utils import LoggingBridge
+from wincan2teksi.core.utils import PLUGIN_LOGGER_NAME, LoggingBridge
 
 Ui_LogsWidget, _ = loadUiType(os.path.join(os.path.dirname(__file__), "..", "ui", "logs_widget.ui"))
 
@@ -163,7 +163,9 @@ class LogsWidget(QWidget, Ui_LogsWidget):
         self.logs_treeView.setUniformRowHeights(False)
 
         self.loggingBridge.loggedLine.connect(self.__logged_line)
-        logging.getLogger().addHandler(self.loggingBridge)
+        plugin_logger = logging.getLogger(PLUGIN_LOGGER_NAME)
+        plugin_logger.setLevel(logging.DEBUG)
+        plugin_logger.addHandler(self.loggingBridge)
 
         self.logs_level_comboBox.addItems(["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"])
         self.logs_level_comboBox.currentTextChanged.connect(self.proxy_model.setLevelFilter)
@@ -182,7 +184,7 @@ class LogsWidget(QWidget, Ui_LogsWidget):
         self.logs_treeView.customContextMenuRequested.connect(self.__showContextMenu)
 
     def close(self):
-        logging.getLogger().removeHandler(self.loggingBridge)
+        logging.getLogger(PLUGIN_LOGGER_NAME).removeHandler(self.loggingBridge)
 
     def __logged_line(self, record, line):
         timestamp = datetime.fromtimestamp(record.created).strftime("%Y-%m-%d %H:%M:%S")

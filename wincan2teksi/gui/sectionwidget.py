@@ -32,11 +32,14 @@ from qgis.PyQt.uic import loadUiType
 
 from qgis.core import QgsProject
 
+import logging
+
 from wincan2teksi.core.settings import Settings
 from wincan2teksi.core.section import find_section, section_at_id
-from wincan2teksi.core.utils import logger
 from wincan2teksi.gui.featureselectorwidget import CanvasExtent
 from wincan2teksi.gui.sectionmodel import SectionTableModel, SectionFilterProxyModel
+
+logger = logging.getLogger(__name__)
 
 Ui_SectionWidget, _ = loadUiType(os.path.join(os.path.dirname(__file__), "../ui/sectionwidget.ui"))
 

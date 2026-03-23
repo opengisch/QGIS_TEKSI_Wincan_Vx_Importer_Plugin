@@ -25,10 +25,12 @@
 
 from qgis.core import QgsProject, QgsFeature, QgsFeatureRequest
 
+import logging
+
 from wincan2teksi.core.exceptions import W2TLayerNotFound
 from wincan2teksi.core.settings import Settings
 
-from wincan2teksi.core.utils import logger
+logger = logging.getLogger(__name__)
 
 
 def find_section(channel, start_node, end_node):

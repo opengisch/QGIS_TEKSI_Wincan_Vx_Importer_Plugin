@@ -30,12 +30,15 @@ from qgis.PyQt.QtWidgets import QAction, QFileDialog
 from qgis.core import Qgis, QgsProject, QgsSettingsTree
 from qgis.gui import QgsRubberBand, QgisInterface
 
+import logging
+from pathlib import Path
+
 from wincan2teksi.core.settings import Settings, PLUGIN_NAME
 from wincan2teksi.core.read_data import read_data
-from wincan2teksi.core.utils import logger
 from wincan2teksi.gui.databrowserdialog import DataBrowserDialog
 from wincan2teksi.gui.settings_dialog import SettingsDialog
-from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 DEBUG = True
 

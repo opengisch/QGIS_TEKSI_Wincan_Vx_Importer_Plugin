@@ -41,9 +41,12 @@ from qgis.PyQt.QtWidgets import (
 
 from qgis.core import QgsFeatureRequest, QgsProject
 
+import logging
+
 from wincan2teksi.core.layer_edit import edit
 from wincan2teksi.core.settings import Settings
-from wincan2teksi.core.utils import logger
+
+logger = logging.getLogger(__name__)
 
 # Deletion order: dependents first, then parents.
 # file_layer entries reference damage/maintenance via "object" field,

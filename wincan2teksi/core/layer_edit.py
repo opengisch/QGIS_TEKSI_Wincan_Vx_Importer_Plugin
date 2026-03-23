@@ -25,9 +25,11 @@
 #
 # ---------------------------------------------------------------------
 
+import logging
+
 from qgis.core import QgsEditError
 
-from wincan2teksi.core.utils import logger
+logger = logging.getLogger(__name__)
 
 
 class edit(object):
