@@ -106,7 +106,7 @@ class Wincan2Teksi(QObject):
         if db3_path == "":
             db3_path = QgsProject.instance().homePath()
         file_path, _ = QFileDialog.getOpenFileName(
-            None, "Open WIncan inspection data", db3_path, "Wincan file (*.db3)"
+            None, self.tr("Open Wincan inspection data"), db3_path, self.tr("Wincan file (*.db3)")
         )
 
         if file_path:
