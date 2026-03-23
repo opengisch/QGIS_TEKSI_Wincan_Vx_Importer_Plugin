@@ -93,4 +93,6 @@ class Settings:
 
             cls.db3_path = QgsSettingsEntryString("db3_path", settings_node, "")
 
+            cls.import_log_dir = QgsSettingsEntryString("import_log_dir", settings_node, "")
+
         return cls.instance

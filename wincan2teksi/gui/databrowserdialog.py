@@ -25,12 +25,15 @@
 #
 # ---------------------------------------------------------------------
 
+import json
 import re
 import os
 from collections import defaultdict
+from datetime import datetime
 
-from qgis.PyQt.QtCore import pyqtSlot, QCoreApplication
-from qgis.PyQt.QtWidgets import QDialog, QMessageBox
+from qgis.PyQt.QtCore import pyqtSlot, QCoreApplication, QUrl, QStandardPaths
+from qgis.PyQt.QtGui import QDesktopServices
+from qgis.PyQt.QtWidgets import QDialog, QMessageBox, QPushButton
 from qgis.PyQt.uic import loadUiType
 
 from qgis.core import QgsProject, QgsFeature, QgsFeatureRequest
@@ -113,6 +116,10 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
 
         for project in self.projects.values():
             self.projectCombo.addItem(project.name, project.pk)
+
+        self.openLogsButton = QPushButton(self.tr("Open import logs"))
+        self.openLogsButton.clicked.connect(self._open_import_logs_folder)
+        self.gridLayout.addWidget(self.openLogsButton, 6, 0)
 
         self.channelNameEdit.setText("")
         # self.on_searchButton_clicked()
@@ -847,6 +854,8 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
             layer_name = QgsProject.instance().mapLayer(layer_id).name()
             logger.info(f"Added {len(obj_ids)} features to {layer_name}")
 
+        self._save_import_log(self.added_features)
+
         self.progressBar.hide()
         self.cancelButton.hide()
         self.importButton.show()
@@ -877,6 +886,37 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
             return True, True
         else:  # Yes
             return True, skip_missing_files
+
+    def _get_import_log_dir(self):
+        path = self.settings.import_log_dir.value()
+        if not path:
+            path = os.path.join(
+                QStandardPaths.writableLocation(
+                    QStandardPaths.StandardLocation.GenericDataLocation
+                ),
+                "wincan2teksi",
+                "import_logs",
+            )
+        return path
+
+    def _save_import_log(self, added_features):
+        log_dir = self._get_import_log_dir()
+        os.makedirs(log_dir, exist_ok=True)
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+        log_file = os.path.join(log_dir, f"import_{timestamp}.json")
+        data = {"timestamp": datetime.now().isoformat(), "features": {}}
+        for layer_id, obj_ids in added_features.items():
+            layer = QgsProject.instance().mapLayer(layer_id)
+            layer_name = layer.name() if layer else layer_id
+            data["features"][layer_name] = {"layer_id": layer_id, "obj_ids": obj_ids}
+        with open(log_file, "w") as f:
+            json.dump(data, f, indent=2, default=str)
+        logger.info(f"Import log saved to {log_file}")
+
+    def _open_import_logs_folder(self):
+        log_dir = self._get_import_log_dir()
+        os.makedirs(log_dir, exist_ok=True)
+        QDesktopServices.openUrl(QUrl.fromLocalFile(log_dir))
 
     def hide_progress(self):
         self.progressBar.hide()

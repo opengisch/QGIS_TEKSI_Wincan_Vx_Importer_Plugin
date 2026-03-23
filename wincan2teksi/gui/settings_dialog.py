@@ -18,9 +18,11 @@
 """
 
 import os
+from qgis.PyQt.QtCore import QStandardPaths
 from qgis.PyQt.QtWidgets import QDialog
 from qgis.PyQt.uic import loadUiType
 from qgis.core import QgsMapLayerModel
+from qgis.gui import QgsFileWidget
 
 from wincan2teksi.core.settings import Settings
 
@@ -54,6 +56,19 @@ class SettingsDialog(QDialog, DialogUi):
                 widget.findData(setting.value(), QgsMapLayerModel.CustomRole.LayerId)
             )
 
+        # Import log directory
+        self.import_log_dir_widget.setStorageMode(QgsFileWidget.StorageMode.GetDirectory)
+        log_dir = self.settings.import_log_dir.value()
+        if not log_dir:
+            log_dir = os.path.join(
+                QStandardPaths.writableLocation(
+                    QStandardPaths.StandardLocation.GenericDataLocation
+                ),
+                "wincan2teksi",
+                "import_logs",
+            )
+        self.import_log_dir_widget.setFilePath(log_dir)
+
     def accept(self):
         for setting_key in SETTINGS:
             widget = getattr(self, setting_key)
@@ -61,4 +76,5 @@ class SettingsDialog(QDialog, DialogUi):
             setting.setValue(
                 widget.itemData(widget.currentIndex(), QgsMapLayerModel.CustomRole.LayerId)
             )
+        self.settings.import_log_dir.setValue(self.import_log_dir_widget.filePath())
         super(SettingsDialog, self).accept()
