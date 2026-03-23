@@ -25,20 +25,17 @@
 
 import os
 from qgis.PyQt.QtCore import pyqtSlot, Qt
-from qgis.PyQt.QtGui import QColor
-from qgis.PyQt.QtWidgets import QWidget, QListWidgetItem
+from qgis.PyQt.QtWidgets import QWidget, QHeaderView
 from qgis.PyQt.uic import loadUiType
 
-from qgis.core import QgsProject, QgsApplication
+from qgis.core import QgsProject
 
 from wincan2teksi.core.settings import Settings
 from wincan2teksi.core.section import section_at_id
 from wincan2teksi.gui.featureselectorwidget import CanvasExtent
+from wincan2teksi.gui.sectionmodel import SectionTableModel, SectionFilterProxyModel
 
 Ui_SectionWidget, _ = loadUiType(os.path.join(os.path.dirname(__file__), "../ui/sectionwidget.ui"))
-
-
-warning_icon = QgsApplication.getThemeIcon("/mIconWarn.png")
 
 
 class SectionWidget(QWidget, Ui_SectionWidget):
@@ -50,23 +47,33 @@ class SectionWidget(QWidget, Ui_SectionWidget):
         self.projectId = None
         self.section_id = None
 
+        self._section_model = SectionTableModel(self)
+        self._proxy_model = SectionFilterProxyModel(self)
+        self._proxy_model.setSourceModel(self._section_model)
+        self.sectionTableView.setModel(self._proxy_model)
+        self.sectionTableView.horizontalHeader().setStretchLastSection(True)
+        self.sectionTableView.horizontalHeader().setSectionResizeMode(
+            QHeaderView.ResizeMode.ResizeToContents
+        )
+        self.sectionTableView.verticalHeader().hide()
+
         self.section_1_selector.feature_changed.connect(self.set_qgep_channel_id1)
         self.section_2_selector.feature_changed.connect(self.set_qgep_channel_id2)
         self.section_3_selector.feature_changed.connect(self.set_qgep_channel_id3)
 
         self.inspectionWidget.importChanged.connect(self.update_status)
 
-        self.sectionListWidget.itemChanged.connect(self.sectionItemChanged)
+        self.sectionTableView.selectionModel().selectionChanged.connect(self._on_selection_changed)
 
         self.filter_unmatched_sections_active = False
         self.filterUnmatchedSectionsButton.clicked.connect(self.filter_unmatched_sections)
 
     def select_section(self, section_id):
-        for r in range(0, self.sectionListWidget.count()):
-            item = self.sectionListWidget.item(r)
-            if section_id == item.data(Qt.ItemDataRole.UserRole):
-                self.sectionListWidget.setCurrentItem(item)
-                break
+        row = self._section_model.row_for_section_id(section_id)
+        if row >= 0:
+            proxy_index = self._proxy_model.mapFromSource(self._section_model.index(row, 0))
+            if proxy_index.isValid():
+                self.sectionTableView.setCurrentIndex(proxy_index)
 
     def finish_init(self, iface, projects):
         layer_id = self.settings.channel_layer.value()
@@ -77,47 +84,15 @@ class SectionWidget(QWidget, Ui_SectionWidget):
         self.inspectionWidget.finish_init(self.projects)
 
     def set_project_id(self, prjId=None):
-        self.sectionListWidget.clear()
-
         if prjId is not None:
             self.projectId = prjId
 
-        if self.projectId is None:
-            return
-
-        for s_id, section in self.projects[prjId].sections.items():
-            title = f"{section.counter}: de {section.from_node} a {section.to_node}"
-            item = QListWidgetItem(warning_icon, title)
-            item.setData(Qt.ItemDataRole.UserRole, s_id)
-            item.setFlags(
-                Qt.ItemFlag.ItemIsEnabled
-                | Qt.ItemFlag.ItemIsSelectable
-                | Qt.ItemFlag.ItemIsUserCheckable
-            )
-            item.setCheckState(
-                Qt.CheckState.Checked if section.import_ else Qt.CheckState.Unchecked
-            )
-            self.sectionListWidget.addItem(item)
-        self.update_status()
+        self._section_model.set_data(self.projects, self.projectId)
+        # Reconnect selection signal after model reset
+        self.sectionTableView.selectionModel().selectionChanged.connect(self._on_selection_changed)
 
     def update_status(self):
-        for r in range(0, self.sectionListWidget.count()):
-            item = self.sectionListWidget.item(r)
-            s_id = item.data(Qt.ItemDataRole.UserRole)
-            section = self.projects[self.projectId].sections[s_id]
-            ok = section.teksi_channel_id_1 is not None or section.use_previous_section is True
-            if not ok:
-                ok = True
-                for inspection in section.inspections.values():
-                    if inspection.import_:
-                        ok = False
-                        break
-            if ok:
-                # item.setIcon(QIcon())  # doesn't seem to be working next to checkboxes
-                item.setBackground(Qt.GlobalColor.white)
-            else:
-                # item.setIcon(warning_icon)  # doesn't seem to be working next to checkboxes
-                item.setBackground(QColor(255, 190, 190))
+        self._section_model.refresh()
 
     def filter_unmatched_sections(self):
         self.filter_unmatched_sections_active = not self.filter_unmatched_sections_active
@@ -125,24 +100,7 @@ class SectionWidget(QWidget, Ui_SectionWidget):
             self.filterUnmatchedSectionsButton.setText(self.tr("Show all sections"))
         else:
             self.filterUnmatchedSectionsButton.setText(self.tr("Filter unmatched sections"))
-        for r in range(0, self.sectionListWidget.count()):
-            item = self.sectionListWidget.item(r)
-            if not self.filter_unmatched_sections_active:
-                item.setHidden(False)
-                continue
-
-            s_id = item.data(Qt.ItemDataRole.UserRole)
-            section = self.projects[self.projectId].sections[s_id]
-            is_matched = (
-                section.teksi_channel_id_1 is not None or section.use_previous_section is True
-            )
-            item.setHidden(is_matched)
-
-    def sectionItemChanged(self, item):
-        s_id = item.data(Qt.ItemDataRole.UserRole)
-        if self.projectId is None:
-            return
-        self.projects[self.projectId].sections[s_id].import_ = bool(item.checkState())
+        self._proxy_model.set_filter_unmatched(self.filter_unmatched_sections_active)
 
     def set_qgep_channel_id1(self, feature):
         if self.projectId is None or self.section_id is None:
@@ -172,10 +130,8 @@ class SectionWidget(QWidget, Ui_SectionWidget):
         self.projects[self.projectId].sections[self.section_id].use_previous_section = checked
         self.update_status()
 
-    @pyqtSlot()
-    def on_sectionListWidget_itemSelectionChanged(self):
+    def _on_selection_changed(self, selected, deselected):
         # Disconnect signals to avoid triggering updates while changing selection
-        # Use try-except because signals might not be connected (e.g., after previous disconnect/reconnect cycle)
         for selector, channel_id_slot in (
             (self.section_1_selector, self.set_qgep_channel_id1),
             (self.section_2_selector, self.set_qgep_channel_id2),
@@ -184,8 +140,6 @@ class SectionWidget(QWidget, Ui_SectionWidget):
             try:
                 selector.feature_changed.disconnect(channel_id_slot)
             except TypeError:
-                # Signal was not connected, which is fine - it means this isn't the first call
-                # or the connection was already removed
                 pass
             selector.clear()
         self.endNodeEdit.clear()
@@ -199,20 +153,21 @@ class SectionWidget(QWidget, Ui_SectionWidget):
         self.addressEdit.clear()
 
         self.section_id = None
-        # self.inspectionWidget.clear()
 
         if self.projectId is None:
             return
 
-        items = self.sectionListWidget.selectedItems()
-        if len(items) < 1:
+        indexes = self.sectionTableView.selectionModel().selectedRows()
+        if not indexes:
             return
 
-        self.section_id = items[0].data(Qt.ItemDataRole.UserRole)
+        proxy_index = indexes[0]
+        source_index = self._proxy_model.mapToSource(proxy_index)
+        self.section_id = self._section_model.section_id_for_row(source_index.row())
 
         # allow use of previous section if not on first section
         self.usePreviousSectionCheckBox.setEnabled(
-            self.section_id != list(self.projects[self.projectId].sections.keys())[0]
+            not self._section_model.is_first_section(self.section_id)
         )
 
         section = self.projects[self.projectId].sections[self.section_id]
@@ -244,15 +199,11 @@ class SectionWidget(QWidget, Ui_SectionWidget):
 
     @pyqtSlot()
     def on_checkAllButton_clicked(self):
-        for r in range(0, self.sectionListWidget.count()):
-            if not self.sectionListWidget.item(r).isHidden():
-                self.sectionListWidget.item(r).setCheckState(Qt.CheckState.Checked)
+        self._section_model.set_all_check_state(Qt.CheckState.Checked.value)
 
     @pyqtSlot()
     def on_uncheckAllButton_clicked(self):
-        for r in range(0, self.sectionListWidget.count()):
-            if not self.sectionListWidget.item(r).isHidden():
-                self.sectionListWidget.item(r).setCheckState(Qt.CheckState.Unchecked)
+        self._section_model.set_all_check_state(Qt.CheckState.Unchecked.value)
 
 
 """
