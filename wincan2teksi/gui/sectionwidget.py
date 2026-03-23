@@ -267,11 +267,20 @@ class SectionWidget(QWidget, Ui_SectionWidget):
 
     @pyqtSlot()
     def on_checkAllButton_clicked(self):
-        self._section_model.set_all_check_state(Qt.CheckState.Checked)
+        self._set_visible_check_state(Qt.CheckState.Checked)
 
     @pyqtSlot()
     def on_uncheckAllButton_clicked(self):
-        self._section_model.set_all_check_state(Qt.CheckState.Unchecked)
+        self._set_visible_check_state(Qt.CheckState.Unchecked)
+
+    def _set_visible_check_state(self, state):
+        from wincan2teksi.gui.sectionmodel import Column
+
+        for row in range(self._proxy_model.rowCount()):
+            source_index = self._proxy_model.mapToSource(
+                self._proxy_model.index(row, Column["Number"])
+            )
+            self._section_model.setData(source_index, state, Qt.ItemDataRole.CheckStateRole)
 
 
 """
