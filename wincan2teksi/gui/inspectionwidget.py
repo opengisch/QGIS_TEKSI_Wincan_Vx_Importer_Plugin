@@ -73,12 +73,11 @@ class InspectionWidget(QWidget, Ui_InspectionWidget):
         self.inspectedLengthEdit.clear()
         self.operatorEdit.clear()
 
-        # self.observationTable.clear()
-
         if self.projectId is None or self.sectionId is None:
             return
 
         if idx < 0:
+            self.observationTable.set_inspection(None, None, None)
             return
 
         self.inspectionId = self.inspectionCombo.itemData(idx)

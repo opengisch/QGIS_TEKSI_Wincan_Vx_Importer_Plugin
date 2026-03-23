@@ -60,6 +60,7 @@ class SectionWidget(QWidget, Ui_SectionWidget):
             QHeaderView.ResizeMode.ResizeToContents
         )
         self.sectionTableView.verticalHeader().hide()
+        self.sectionTableView.verticalHeader().setDefaultSectionSize(20)
         self.sectionTableView.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.sectionTableView.customContextMenuRequested.connect(self._show_context_menu)
 
