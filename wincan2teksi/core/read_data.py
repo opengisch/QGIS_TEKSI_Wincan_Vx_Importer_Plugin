@@ -228,38 +228,76 @@ def _parse_pdf_pages(pdf_path: str, projects: dict) -> None:
         return
 
     # Step 1: Extract TOC text from initial pages
+    # Look for common TOC headers in multiple languages
+    toc_patterns = [
+        "Table des matières",
+        "Table of Contents",
+        "Inhaltsverzeichnis",
+    ]
     toc_text = ""
     for page_idx in range(min(len(reader.pages), 30)):
         text = reader.pages[page_idx].extract_text() or ""
-        if "Table des matières" in text or re.search(r"Page\s+[A-Z]-\d+", text):
+        is_toc = any(p in text for p in toc_patterns) or re.search(r"Page\s+[A-Z]-\d+", text)
+        if is_toc:
             toc_text += text + "\n"
-        else:
+        elif toc_text:
+            # We had TOC pages but this one isn't — stop
             break
 
     if not toc_text:
-        logger.warning("Could not find table of contents in PDF")
+        logger.warning(
+            "Could not find table of contents in PDF. First page starts with: %s",
+            (reader.pages[0].extract_text() or "")[:200],
+        )
         return
 
+    logger.debug("TOC text extracted (%d chars) from PDF", len(toc_text))
+
     # Step 2: Parse section entries from TOC
-    # Format: "Section: N; from - to  ...dots...  PAGE" possibly split across two lines
+    # Try multiple patterns to handle different PDF text extraction layouts
     toc_entries = {}
+
+    # Pattern A: "Section: N; from - to" on one line, page number on next line
     matches = re.findall(
         r"Section:\s*(\d+);[^\n]+\n[^\d\n]*(\d+)\s*$",
         toc_text,
         re.MULTILINE,
     )
     if not matches:
-        # Try single-line format
+        # Pattern B: "Section: N; ... PAGE" all on one line
         matches = re.findall(
             r"Section:\s*(\d+);.*?(\d+)\s*$",
             toc_text,
             re.MULTILINE,
         )
+    if not matches:
+        # Pattern C: German "Haltung: N; ..." or "Abschnitt: N; ..."
+        matches = re.findall(
+            r"(?:Haltung|Abschnitt):\s*(\d+);[^\n]+\n[^\d\n]*(\d+)\s*$",
+            toc_text,
+            re.MULTILINE,
+        )
+    if not matches:
+        matches = re.findall(
+            r"(?:Haltung|Abschnitt):\s*(\d+);.*?(\d+)\s*$",
+            toc_text,
+            re.MULTILINE,
+        )
+
     for counter_str, page_str in matches:
         toc_entries[int(counter_str)] = int(page_str)
 
     if not toc_entries:
-        logger.warning("Could not parse section entries from PDF table of contents")
+        # Log the first few lines containing potential section references for debugging
+        sample_lines = [
+            line
+            for line in toc_text.split("\n")
+            if re.search(r"\d+;", line) or "ection" in line.lower()
+        ][:5]
+        logger.warning(
+            "Could not parse section entries from PDF table of contents. Sample lines: %s",
+            sample_lines,
+        )
         return
 
     # Step 3: Determine page offset
@@ -267,7 +305,7 @@ def _parse_pdf_pages(pdf_path: str, projects: dict) -> None:
     offset = None
     for page_idx in range(min(len(reader.pages), 30)):
         text = reader.pages[page_idx].extract_text() or ""
-        if "Table des matières" in text:
+        if any(p in text for p in toc_patterns):
             continue
         if re.search(r"Page\s+[A-Z]-\d+", text):
             continue
