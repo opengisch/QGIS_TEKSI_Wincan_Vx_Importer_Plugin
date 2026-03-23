@@ -1,6 +1,6 @@
 # -----------------------------------------------------------
 #
-# QGIS wincan 2 QGEP Plugin
+# QGIS Wincan 2 Teksi Plugin
 # Copyright (C) 2016 Denis Rouzaud
 #
 # -----------------------------------------------------------
@@ -64,9 +64,9 @@ class SectionWidget(QWidget, Ui_SectionWidget):
         self.sectionTableView.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.sectionTableView.customContextMenuRequested.connect(self._show_context_menu)
 
-        self.section_1_selector.feature_changed.connect(self.set_qgep_channel_id1)
-        self.section_2_selector.feature_changed.connect(self.set_qgep_channel_id2)
-        self.section_3_selector.feature_changed.connect(self.set_qgep_channel_id3)
+        self.section_1_selector.feature_changed.connect(self.set_teksi_channel_id1)
+        self.section_2_selector.feature_changed.connect(self.set_teksi_channel_id2)
+        self.section_3_selector.feature_changed.connect(self.set_teksi_channel_id3)
 
         self.inspectionWidget.importChanged.connect(self.update_status)
 
@@ -109,21 +109,21 @@ class SectionWidget(QWidget, Ui_SectionWidget):
             self.filterUnmatchedSectionsButton.setText(self.tr("Filter unmatched sections"))
         self._proxy_model.set_filter_unmatched(self.filter_unmatched_sections_active)
 
-    def set_qgep_channel_id1(self, feature):
+    def set_teksi_channel_id1(self, feature):
         if self.projectId is None or self.section_id is None:
             return
         obj_id = feature.attribute("obj_id") if feature.isValid() else None
         self.projects[self.projectId].sections[self.section_id].teksi_channel_id_1 = obj_id
         self.update_status()
 
-    def set_qgep_channel_id2(self, feature):
+    def set_teksi_channel_id2(self, feature):
         if self.projectId is None or self.section_id is None:
             return
         obj_id = feature.attribute("obj_id") if feature.isValid() else None
         self.projects[self.projectId].sections[self.section_id].teksi_channel_id_2 = obj_id
         self.update_status()
 
-    def set_qgep_channel_id3(self, feature):
+    def set_teksi_channel_id3(self, feature):
         if self.projectId is None or self.section_id is None:
             return
         obj_id = feature.attribute("obj_id") if feature.isValid() else None
@@ -140,9 +140,9 @@ class SectionWidget(QWidget, Ui_SectionWidget):
     def _on_selection_changed(self, selected, deselected):
         # Disconnect signals to avoid triggering updates while changing selection
         for selector, channel_id_slot in (
-            (self.section_1_selector, self.set_qgep_channel_id1),
-            (self.section_2_selector, self.set_qgep_channel_id2),
-            (self.section_3_selector, self.set_qgep_channel_id3),
+            (self.section_1_selector, self.set_teksi_channel_id1),
+            (self.section_2_selector, self.set_teksi_channel_id2),
+            (self.section_3_selector, self.set_teksi_channel_id3),
         ):
             try:
                 selector.feature_changed.disconnect(channel_id_slot)
@@ -180,9 +180,9 @@ class SectionWidget(QWidget, Ui_SectionWidget):
         section = self.projects[self.projectId].sections[self.section_id]
 
         for selector, channel_id, channel_id_slot in (
-            (self.section_1_selector, section.teksi_channel_id_1, self.set_qgep_channel_id1),
-            (self.section_2_selector, section.teksi_channel_id_2, self.set_qgep_channel_id2),
-            (self.section_3_selector, section.teksi_channel_id_3, self.set_qgep_channel_id3),
+            (self.section_1_selector, section.teksi_channel_id_1, self.set_teksi_channel_id1),
+            (self.section_2_selector, section.teksi_channel_id_2, self.set_teksi_channel_id2),
+            (self.section_3_selector, section.teksi_channel_id_3, self.set_teksi_channel_id3),
         ):
             feature = section_at_id(channel_id)
             if feature.isValid():

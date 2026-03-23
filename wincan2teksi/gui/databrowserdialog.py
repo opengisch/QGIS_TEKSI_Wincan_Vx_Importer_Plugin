@@ -344,12 +344,12 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                 for i_id, inspection in self.projects[p_id].sections[s_id].inspections.items():
                     if inspection.import_:
                         # offset in case of several sections in inspection
-                        # data correspond to a single section in qgep data
+                        # data correspond to a single section in teksi data
                         distance_offset = 0
 
                         if section.use_previous_section is not True:
                             previous_section_imported = True
-                            # get corresponding reaches in qgep project
+                            # get corresponding reaches in teksi project
                             reach_features = []
 
                             for fid in [
@@ -393,9 +393,9 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                 self.hide_progress()
                                 return
 
-                            # create maintenance/examination event (one per qgep reach feature)
+                            # create maintenance/examination event (one per teksi reach feature)
                             for rf in reach_features:
-                                # in case several sections in qgep data
+                                # in case several sections in teksi data
                                 # correspond to a single section in inspection data
                                 mf = QgsFeature()
                                 init_fields = maintenance_layer.fields()
@@ -432,7 +432,7 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                 }
 
                         else:
-                            # in case several sections in inspection data correspond to a single section in qgep data
+                            # in case several sections in inspection data correspond to a single section in teksi data
                             # substract length from previous sections in inspection data
                             if not previous_section_imported:
                                 self.cannotImportScrollArea.show()
