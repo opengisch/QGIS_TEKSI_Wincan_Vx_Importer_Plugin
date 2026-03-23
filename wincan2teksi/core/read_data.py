@@ -227,8 +227,13 @@ def _parse_pdf_pages(pdf_path: str, projects: dict) -> None:
         logger.warning(f"Could not read PDF {pdf_path}: {e}")
         return
 
-    # Step 1: Extract TOC text from initial pages
-    # Look for common TOC headers in multiple languages
+    try:
+        _extract_pdf_pages(reader, projects)
+    finally:
+        reader.close()
+
+
+def _extract_pdf_pages(reader, projects: dict) -> None:
     toc_patterns = [
         "Table des matières",
         "Table of Contents",
