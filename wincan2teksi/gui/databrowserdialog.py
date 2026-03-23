@@ -221,7 +221,7 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
         self.progressBar.setMaximum(c)
         self.progressBar.setMinimum(0)
         self.progressBar.setValue(0)
-        self.progressBar.setFormat("Searching channels %v/%m")
+        self.progressBar.setFormat(self.tr("Searching channels %v/%m"))
         self.progressBar.show()
         self.cancelButton.show()
         self.importButton.hide()
@@ -337,7 +337,7 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
         self.progressBar.setMaximum(c)
         self.progressBar.setMinimum(0)
         self.progressBar.setValue(0)
-        self.progressBar.setFormat("Checking channels %v/%m")
+        self.progressBar.setFormat(self.tr("Checking channels %v/%m"))
         self.progressBar.show()
         self.cancelButton.show()
         self.importButton.hide()
@@ -562,16 +562,12 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                         continue
                                     message = ""
                                     if single_damage_class is None:
-                                        message = self.tr(
-                                            "Invalid damage level: '{level}'".format(
-                                                level=observation.rate
-                                            )
+                                        message = self.tr("Invalid damage level: '{level}'").format(
+                                            level=observation.rate
                                         )
                                     if channel_damage_code is None:
-                                        message += self.tr(
-                                            "Invalid damage code: '{code}'".format(
-                                                code=observation.code
-                                            )
+                                        message += self.tr("Invalid damage code: '{code}'").format(
+                                            code=observation.code
                                         )
                                     reply = QMessageBox.question(
                                         self,
@@ -626,7 +622,7 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
         self.progressBar.setMaximum(len(features))
         self.progressBar.setMinimum(0)
         self.progressBar.setValue(0)
-        self.progressBar.setFormat("Importing %v/%m")
+        self.progressBar.setFormat(self.tr("Importing %v/%m"))
         self.progressBar.show()
         self.cancelButton.show()
         self.importButton.hide()
@@ -709,8 +705,8 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                                     _fields += f"{name}: {value}\n"
                                                 message = (
                                                     self.tr(
-                                                        f"error adding feature to file layer (fid: {of['obj_id']}): error. "
-                                                    )
+                                                        "error adding feature to file layer (fid: {fid}): error. "
+                                                    ).format(fid=of["obj_id"])
                                                     + f"{_fields}"
                                                 )
                                                 logger.error(message)
@@ -737,8 +733,8 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                         _fields += f"{name}: {value}\n"
                                     message = (
                                         self.tr(
-                                            f"error adding feature to maintenance layer (fid: {maintenance['obj_id']}): error. "
-                                        )
+                                            "error adding feature to maintenance layer (fid: {fid}): error. "
+                                        ).format(fid=maintenance["obj_id"])
                                         + f"{_fields}"
                                     )
                                     self.cannotImportScrollArea.show()
@@ -765,8 +761,8 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                             _fields += f"{name}: {value}\n"
                                         message = (
                                             self.tr(
-                                                f"error adding feature to damage layer (fid: {damage['obj_id']}): error. "
-                                            )
+                                                "error adding feature to damage layer (fid: {fid}): error. "
+                                            ).format(fid=damage["obj_id"])
                                             + f"{_fields}"
                                         )
                                         logger.error(message)
@@ -840,8 +836,8 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                                 _fields += f"{name}: {value}\n"
                                             message = (
                                                 self.tr(
-                                                    f"error adding media to file layer (fid: {of['obj_id']}): error. "
-                                                )
+                                                    "error adding media to file layer (fid: {fid}): error. "
+                                                ).format(fid=of["obj_id"])
                                                 + f"{_fields}"
                                             )
                                             logger.error(message)
@@ -875,8 +871,8 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                         _fields += f"{name}: {value}\n"
                                     message = (
                                         self.tr(
-                                            f"error adding feature to join layer (fid: {jf['obj_id']}): error. "
-                                        )
+                                            "error adding feature to join layer (fid: {fid}): error. "
+                                        ).format(fid=jf["obj_id"])
                                         + f"{_fields}"
                                     )
                                     logger.error(message)
