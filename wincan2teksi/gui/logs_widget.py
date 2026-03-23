@@ -2,7 +2,13 @@ import logging
 import os
 from datetime import datetime
 
-from qgis.PyQt.QtCore import QAbstractItemModel, QModelIndex, QSortFilterProxyModel, Qt
+from qgis.PyQt.QtCore import (
+    QAbstractItemModel,
+    QCoreApplication,
+    QModelIndex,
+    QSortFilterProxyModel,
+    Qt,
+)
 from qgis.PyQt.QtGui import QAction, QKeySequence, QShortcut
 from qgis.PyQt.QtWidgets import (
     QAbstractItemView,
@@ -192,6 +198,8 @@ class LogsWidget(QWidget, Ui_LogsWidget):
 
         scroll_bar = self.logs_treeView.verticalScrollBar()
         scroll_bar.setValue(scroll_bar.maximum())
+
+        QCoreApplication.processEvents()
 
     def __logsClearClicked(self):
         self.logs_model.clear()
