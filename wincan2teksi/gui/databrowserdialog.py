@@ -136,6 +136,36 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
         if self.current_project_id is None:
             return
 
+        channel = self.projects[self.current_project_id].channel
+        if channel:
+            prefix = f"{channel}-"
+            duplicated_sections = []
+            for section in self.projects[self.current_project_id].sections.values():
+                if (section.from_node and section.from_node.startswith(prefix)) or (
+                    section.to_node and section.to_node.startswith(prefix)
+                ):
+                    duplicated_sections.append(f"  {section.from_node} → {section.to_node}")
+            if duplicated_sections:
+                details = "\n".join(duplicated_sections[:10])
+                if len(duplicated_sections) > 10:
+                    details += self.tr("\n  ... and {n} more").format(
+                        n=len(duplicated_sections) - 10
+                    )
+                reply = QMessageBox.warning(
+                    self,
+                    self.tr("Possible duplicate channel prefix"),
+                    self.tr(
+                        "The channel name '{channel}' is already present in some"
+                        " section node names. This will lead to searching for"
+                        " '{channel}-{channel}-node' which will likely not find"
+                        " any match.\n\n{details}\n\n"
+                        "Do you want to continue anyway?"
+                    ).format(channel=channel, details=details),
+                    QMessageBox.Yes | QMessageBox.No,
+                )
+                if reply != QMessageBox.Yes:
+                    return
+
         self.sectionWidget.setEnabled(False)
 
         # init progress bar
@@ -153,7 +183,6 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
         i = 0
 
         # find sections
-        channel = self.projects[self.current_project_id].channel
         for project in self.projects.values():
             if self.cancel:
                 break
