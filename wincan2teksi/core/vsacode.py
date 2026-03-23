@@ -23,7 +23,7 @@
 #
 # ---------------------------------------------------------------------
 
-from qgis.core import QgsProject, QgsFeature, QgsFeatureRequest, QgsApplication, NULL
+from qgis.core import QgsProject, QgsFeature, QgsFeatureRequest, NULL
 
 from wincan2teksi.core.settings import Settings
 from wincan2teksi.core.exceptions import W2TLayerNotFound
@@ -45,12 +45,10 @@ def damage_code_to_vl(code: str) -> str:
         raise W2TLayerNotFound(
             f"Damage channel layer with ID {layer_id} not found in the current QGIS project."
         )
-    if layer is not None:
-        code = CODE_PREMATCH.get(code, code)
-        request_text = "\"value_en\" = '{}'".format(code)
-        request = QgsFeatureRequest().setFilterExpression(request_text)
-        feature = next(layer.getFeatures(request), QgsFeature())
-        # print request_text, feature.isValid()
+    code = CODE_PREMATCH.get(code, code)
+    request_text = "\"value_en\" = '{}'".format(code)
+    request = QgsFeatureRequest().setFilterExpression(request_text)
+    feature = next(layer.getFeatures(request), QgsFeature())
 
     if feature.isValid():
         return feature["code"]
@@ -70,11 +68,9 @@ def damage_level_to_vl(code):
         raise W2TLayerNotFound(
             f"Damage single class layer with ID {layer_id} not found in the current QGIS project."
         )
-    if layer is not None:
-        request_text = "\"value_en\" = 'EZ{}'".format(code)
-        request = QgsFeatureRequest().setFilterExpression(request_text)
-        feature = next(layer.getFeatures(request), QgsFeature())
-        # print request_text, feature.isValid()
+    request_text = "\"value_en\" = 'EZ{}'".format(code)
+    request = QgsFeatureRequest().setFilterExpression(request_text)
+    feature = next(layer.getFeatures(request), QgsFeature())
 
     if feature.isValid():
         return feature["code"]
@@ -93,11 +89,9 @@ def damage_level_2_structure_condition(level):
         raise W2TLayerNotFound(
             f"Wastewater structure condition layer with ID {layer_id} not found in the current QGIS project."
         )
-    if layer is not None:
-        request_text = "\"value_en\" = 'Z{}'".format(level)
-        request = QgsFeatureRequest().setFilterExpression(request_text)
-        feature = next(layer.getFeatures(request), QgsFeature())
-        # print request_text, feature.isValid()
+    request_text = "\"value_en\" = 'Z{}'".format(level)
+    request = QgsFeatureRequest().setFilterExpression(request_text)
+    feature = next(layer.getFeatures(request), QgsFeature())
 
     if feature.isValid():
         return feature["code"]
@@ -117,9 +111,7 @@ def structure_condition_2_damage_level(code):
             f"Wastewater structure condition layer with ID {layer_id} not found in the current QGIS project."
         )
 
-    print(code, QgsApplication.nullRepresentation(), code == QgsApplication.nullRepresentation())
-
-    if layer is None or code == NULL or code is None:
+    if code == NULL or code is None:
         return None
 
     request_text = "\"code\" = '{}'".format(code)
