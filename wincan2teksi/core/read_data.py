@@ -20,14 +20,45 @@ class WinCanData:
         self.projects = {}
 
 
-def __read_table(cursor: sqlite3.Cursor, table_name: str, where_clause: str = None):
+ALLOWED_TABLES = frozenset(
+    {"PROJECT", "SECTION", "NODE", "SECINSP", "SECOBS", "SECOBSMM", "OPERATOR"}
+)
+
+
+def __read_table(
+    cursor: sqlite3.Cursor,
+    table_name: str,
+    conditions: dict = None,
+    extra_condition: str = None,
+):
     """Reads a table from the SQLite database and returns a list of dictionaries.
     Each dictionary represents a row in the table with column names as keys.
+
+    Args:
+        cursor: SQLite cursor.
+        table_name: Name of the table (must be in ALLOWED_TABLES).
+        conditions: Dict of {column_name: value} for WHERE clause with parameterized queries.
+        extra_condition: Additional raw SQL condition with no user-supplied values (e.g. "X IS NULL").
     """
-    if where_clause:
-        cursor.execute(f"SELECT * FROM {table_name} WHERE {where_clause}")
-    else:
-        cursor.execute(f"SELECT * FROM {table_name}")
+    if table_name not in ALLOWED_TABLES:
+        raise ValueError(f"Table name '{table_name}' is not allowed.")
+
+    query = f"SELECT * FROM {table_name}"
+    params = []
+    where_parts = []
+
+    if conditions:
+        for col, val in conditions.items():
+            where_parts.append(f"{col} = ?")
+            params.append(val)
+
+    if extra_condition:
+        where_parts.append(extra_condition)
+
+    if where_parts:
+        query += " WHERE " + " AND ".join(where_parts)
+
+    cursor.execute(query, params)
     columns = [desc[0] for desc in cursor.description]
     rows = cursor.fetchall()
     return [dict(zip(columns, row)) for row in rows]
@@ -64,7 +95,7 @@ def read_data(file: str) -> WinCanData:
         data.pdf_file = str(pdf_path)
 
     try:
-        project_data = __read_table(cursor, "PROJECT", "PRJ_Deleted IS NULL")
+        project_data = __read_table(cursor, "PROJECT", extra_condition="PRJ_Deleted IS NULL")
     except sqlite3.OperationalError as e:
         raise InvalidProjectFile(f"Invalid project file: {file_path}") from e
 
@@ -73,16 +104,32 @@ def read_data(file: str) -> WinCanData:
     for project in projects:
         logger.info(f"Processing project: {project.name} (PK: {project.pk})")
         sections = __read_table(
-            cursor, "SECTION", f"OBJ_Project_FK = '{project.pk}' AND OBJ_Deleted IS NULL"
+            cursor,
+            "SECTION",
+            conditions={"OBJ_Project_FK": project.pk},
+            extra_condition="OBJ_Deleted IS NULL",
         )
         for section_data in sections:
             section = Section.from_dict(section_data)
-            section.from_node = __read_table(
-                cursor, "NODE", f"OBJ_PK = '{section.from_node}' AND OBJ_Deleted IS NULL"
-            )[0]["OBJ_Key"]
-            section.to_node = __read_table(
-                cursor, "NODE", f"OBJ_PK = '{section.to_node}' AND OBJ_Deleted IS NULL"
-            )[0]["OBJ_Key"]
+            from_nodes = __read_table(
+                cursor,
+                "NODE",
+                conditions={"OBJ_PK": section.from_node},
+                extra_condition="OBJ_Deleted IS NULL",
+            )
+            to_nodes = __read_table(
+                cursor,
+                "NODE",
+                conditions={"OBJ_PK": section.to_node},
+                extra_condition="OBJ_Deleted IS NULL",
+            )
+            if not from_nodes or not to_nodes:
+                logger.warning(
+                    f"Missing node data for section {section.name} (PK: {section.pk}), skipping"
+                )
+                continue
+            section.from_node = from_nodes[0]["OBJ_Key"]
+            section.to_node = to_nodes[0]["OBJ_Key"]
             section.original_from_node = section.from_node
             section.original_to_node = section.to_node
 
@@ -91,7 +138,10 @@ def read_data(file: str) -> WinCanData:
             )
 
             inspections = __read_table(
-                cursor, "SECINSP", f"INS_Section_FK = '{section.pk}' AND INS_Deleted IS NULL"
+                cursor,
+                "SECINSP",
+                conditions={"INS_Section_FK": section.pk},
+                extra_condition="INS_Deleted IS NULL",
             )
             if not inspections:
                 logger.warning(
@@ -112,7 +162,8 @@ def read_data(file: str) -> WinCanData:
                 observations = __read_table(
                     cursor,
                     "SECOBS",
-                    f"OBS_Inspection_FK = '{inspection.pk}' AND OBS_Deleted IS NULL",
+                    conditions={"OBS_Inspection_FK": inspection.pk},
+                    extra_condition="OBS_Deleted IS NULL",
                 )
                 if not observations:
                     logger.warning(
@@ -127,7 +178,8 @@ def read_data(file: str) -> WinCanData:
                     mmfiles = __read_table(
                         cursor,
                         "SECOBSMM",
-                        f"OMM_Observation_FK = '{observation.pk}' AND OMM_Deleted IS NULL",
+                        conditions={"OMM_Observation_FK": observation.pk},
+                        extra_condition="OMM_Deleted IS NULL",
                     )
                     for mmfile in mmfiles:
                         if mmfile["OMM_Type"] in ("PI1", "PI2"):
