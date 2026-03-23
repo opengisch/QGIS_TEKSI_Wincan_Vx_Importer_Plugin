@@ -909,7 +909,11 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
         os.makedirs(log_dir, exist_ok=True)
         timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
         log_file = os.path.join(log_dir, f"import_{timestamp}.json")
+        project_name = ""
+        if self.current_project_id and self.current_project_id in self.projects:
+            project_name = self.projects[self.current_project_id].name
         data = {
+            "project": project_name,
             "timestamp": datetime.now().isoformat(),
             "user": QgsExpressionContextUtils.globalScope().variable("user_full_name") or "",
             "features": {},

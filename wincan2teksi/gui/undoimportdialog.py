@@ -97,11 +97,15 @@ class UndoImportDialog(QDialog):
             except (json.JSONDecodeError, OSError):
                 continue
 
+            project = data.get("project", "")
             timestamp = data.get("timestamp", "?")
             user = data.get("user", "")
             features = data.get("features", {})
             total = sum(len(v.get("obj_ids", [])) for v in features.values())
-            label = f"{timestamp}"
+            label = ""
+            if project:
+                label += f"{project} — "
+            label += f"{timestamp}"
             if user:
                 label += f" — {user}"
             label += f" ({total} features)"
