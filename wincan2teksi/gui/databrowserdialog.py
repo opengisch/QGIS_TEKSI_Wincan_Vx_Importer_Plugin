@@ -1045,6 +1045,10 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
         self._logs_widget.close()
         super().close()
 
+    def reject(self):
+        self.sectionWidget.cleanup()
+        super().reject()
+
     def hide_progress(self):
         self.progressBar.hide()
         self.cancelButton.hide()
