@@ -192,6 +192,7 @@ class SectionWidget(QWidget, Ui_SectionWidget):
             (self.section_2_selector, section.teksi_channel_id_2, self.set_teksi_channel_id2),
             (self.section_3_selector, section.teksi_channel_id_3, self.set_teksi_channel_id3),
         ):
+            selector.delete_highlight()
             feature = section_at_id(channel_id)
             if feature.isValid():
                 selector.set_feature(feature)
