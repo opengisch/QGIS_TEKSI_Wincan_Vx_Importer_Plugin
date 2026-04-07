@@ -101,8 +101,11 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                     self.tr("pypdf is not installed. PDF page matching is not available.")
                 )
 
+        self.messageBar_placeholder.setFixedHeight(60)
         self.message_bar = QgsMessageBar(self)
-        self.message_bar.setFixedHeight(60)
+        self.message_bar.layout().setContentsMargins(0, 0, 0, 0)
+        self.message_bar.layout().setSpacing(0)
+        # Reduce padding on internal frame and label
         placeholder_layout = QVBoxLayout(self.messageBar_placeholder)
         placeholder_layout.setContentsMargins(0, 0, 0, 0)
         placeholder_layout.addWidget(self.message_bar)
@@ -954,6 +957,7 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
             self.tr("Success"),
             self.tr("Import completed: {details}.").format(details=", ".join(summary_parts)),
             Qgis.MessageLevel.Success,
+            15,
         )
 
     def check_media_file_exists(self, file_path, skip_missing_files):
