@@ -103,7 +103,7 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
 
         self.messageBar_placeholder.setFixedHeight(60)
         self.message_bar = QgsMessageBar(self)
-        self.message_bar.layout().setContentsMargins(0, 0, 0, 0)
+        self.message_bar.layout().setContentsMargins(2, 2, 2, 2)
         self.message_bar.layout().setSpacing(0)
         # Reduce padding on internal frame and label
         placeholder_layout = QVBoxLayout(self.messageBar_placeholder)
