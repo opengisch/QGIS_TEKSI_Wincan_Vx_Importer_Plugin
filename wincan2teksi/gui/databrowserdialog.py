@@ -150,6 +150,7 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
         self._logs_group_box.setVisible(self.settings.show_logs.value())
 
         menu_bar = QMenuBar(self)
+        menu_bar.setNativeMenuBar(False)
         tools_menu = menu_bar.addMenu(self.tr("Tools"))
         tools_menu.addAction(self.tr("Settings..."), self._open_settings)
         tools_menu.addAction(self.tr("Undo import..."), self._open_undo_import)
