@@ -175,6 +175,12 @@ class LogsWidget(QWidget, Ui_LogsWidget):
             QApplication.style().standardIcon(QStyle.StandardPixmap.SP_TitleBarCloseButton)
         )
         self.logs_clear_toolButton.clicked.connect(self.__logsClearClicked)
+
+        self.logs_copy_all_toolButton.setIcon(
+            QApplication.style().standardIcon(QStyle.StandardPixmap.SP_DialogSaveButton)
+        )
+        self.logs_copy_all_toolButton.clicked.connect(self.__copyAllLogs)
+
         self.logs_filter_LineEdit.textChanged.connect(self.proxy_model.setTextFilter)
 
         self.copy_shortcut = QShortcut(QKeySequence.StandardKey.Copy, self.logs_treeView)
@@ -241,6 +247,33 @@ class LogsWidget(QWidget, Ui_LogsWidget):
             source_index = self.proxy_model.mapToSource(proxy_index)
             row = source_index.row()
             log_entry = self.logs_model.logs[row]
+
+            def escape_csv(value):
+                value = str(value)
+                if "," in value or '"' in value or "\n" in value:
+                    return '"' + value.replace('"', '""') + '"'
+                return value
+
+            csv_line = ",".join(
+                [
+                    escape_csv(log_entry["Timestamp"]),
+                    escape_csv(log_entry["Level"]),
+                    escape_csv(log_entry["Module"]),
+                    escape_csv(log_entry["Message"]),
+                ]
+            )
+            csv_lines.append(csv_line)
+
+        clipboard = QApplication.clipboard()
+        clipboard.setText("\n".join(csv_lines))
+
+    def __copyAllLogs(self):
+        if not self.logs_model.logs:
+            return
+
+        csv_lines = ["Timestamp,Level,Module,Message"]
+
+        for log_entry in self.logs_model.logs:
 
             def escape_csv(value):
                 value = str(value)
