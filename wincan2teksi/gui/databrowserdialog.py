@@ -1040,6 +1040,7 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
         self._logs_group_box.setVisible(checked)
 
     def close(self):
+        self.sectionWidget.cleanup()
         self._logs_widget.close()
         super().close()
 

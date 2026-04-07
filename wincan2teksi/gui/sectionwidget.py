@@ -94,6 +94,10 @@ class SectionWidget(QWidget, Ui_SectionWidget):
         self.projects = projects
         self.inspectionWidget.finish_init(self.projects)
 
+    def cleanup(self):
+        for selector in (self.section_1_selector, self.section_2_selector, self.section_3_selector):
+            selector.delete_highlight()
+
     def set_project_id(self, prjId=None):
         if prjId is not None:
             self.projectId = prjId
@@ -193,7 +197,15 @@ class SectionWidget(QWidget, Ui_SectionWidget):
                 selector.set_feature(feature)
             selector.feature_changed.connect(channel_id_slot)
 
-        self.section_1_selector.highlight_feature(CanvasExtent.Pan)
+        # Use the current action from the first selector's dropdown
+        action = self.section_1_selector.highlight_feature_button.defaultAction()
+        if action == self.section_1_selector.scale_highlight_feature_action:
+            canvas_extent = CanvasExtent.Scale
+        elif action == self.section_1_selector.pan_highlight_feature_action:
+            canvas_extent = CanvasExtent.Pan
+        else:
+            canvas_extent = CanvasExtent.Fixed
+        self.section_1_selector.highlight_feature(canvas_extent)
 
         self.usePreviousSectionCheckBox.setChecked(section.use_previous_section)
         self.endNodeEdit.setText(section.to_node)

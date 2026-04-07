@@ -24,12 +24,11 @@
 # ---------------------------------------------------------------------
 
 
-from qgis.PyQt.QtCore import pyqtSignal, pyqtSlot, QSettings
-from qgis.PyQt.QtGui import QColor
-from qgis.PyQt.QtWidgets import QWidget, QHBoxLayout, QLineEdit, QToolButton, QAction
+from qgis.PyQt.QtCore import pyqtSignal, pyqtSlot
+from qgis.PyQt.QtGui import QAction, QColor
+from qgis.PyQt.QtWidgets import QWidget, QHBoxLayout, QLineEdit, QToolButton
 
 from qgis.core import (
-    Qgis,
     QgsApplication,
     QgsFeature,
     QgsExpression,
@@ -37,6 +36,8 @@ from qgis.core import (
     QgsExpressionContextScope,
 )
 from qgis.gui import QgsMapToolIdentifyFeature, QgsHighlight
+
+from wincan2teksi.core.settings import Settings
 
 
 class CanvasExtent(object):
@@ -84,7 +85,7 @@ class FeatureSelectorWidget(QWidget):
         self.highlight_feature_button.addAction(self.highlight_feature_action)
         self.highlight_feature_button.addAction(self.scale_highlight_feature_action)
         self.highlight_feature_button.addAction(self.pan_highlight_feature_action)
-        self.highlight_feature_button.setDefaultAction(self.highlight_feature_action)
+        self.highlight_feature_button.setDefaultAction(self.pan_highlight_feature_action)
         edit_layout.addWidget(self.highlight_feature_button)
 
         self.map_identification_button = QToolButton(self)
@@ -129,9 +130,11 @@ class FeatureSelectorWidget(QWidget):
         if feature_title == "":
             feature_title = feature.id()
         self.line_edit.setText(str(feature_title))
-        self.highlight_feature(canvas_extent)
+        if canvas_extent != CanvasExtent.Fixed:
+            self.highlight_feature(canvas_extent)
 
     def clear(self):
+        self.delete_highlight()
         self.feature = QgsFeature()
         self.line_edit.clear()
         self.feature_changed.emit(self.feature)
@@ -177,12 +180,9 @@ class FeatureSelectorWidget(QWidget):
             feature_bounding_box = self.canvas.mapSettings().layerToMapCoordinates(
                 self.layer, feature_bounding_box
             )
-            extent = self.canvas.extent()
-            if not extent.contains(feature_bounding_box):
-                extent.combineExtentWith(feature_bounding_box)
-                extent.scale(1.1)
-                self.canvas.setExtent(extent)
-                self.canvas.refresh()
+            feature_bounding_box.scale(2.0)
+            self.canvas.setExtent(feature_bounding_box)
+            self.canvas.refresh()
 
         elif canvas_extent == CanvasExtent.Pan:
             centroid = geom.centroid()
@@ -195,24 +195,15 @@ class FeatureSelectorWidget(QWidget):
         self.delete_highlight()
         self.highlight = QgsHighlight(self.canvas, geom, self.layer)
 
-        settings = QSettings()
-        color = QColor(settings.value("/Map/highlight/color", Qgis.DEFAULT_HIGHLIGHT_COLOR.name()))
-        alpha = int(
-            settings.value("/Map/highlight/colorAlpha", Qgis.DEFAULT_HIGHLIGHT_COLOR.alpha())
-        )
-        buffer = 2 * float(
-            settings.value("/Map/highlight/buffer", Qgis.DEFAULT_HIGHLIGHT_BUFFER_MM)
-        )
-        min_width = 2 * float(
-            settings.value("/Map/highlight/min_width", Qgis.DEFAULT_HIGHLIGHT_MIN_WIDTH_MM)
-        )
+        plugin_settings = Settings()
+        color = QColor(plugin_settings.highlight_color.value())
+        buffer = plugin_settings.highlight_buffer.value()
+        width = plugin_settings.highlight_width.value()
 
         self.highlight.setColor(color)  # sets also fill with default alpha
-        color.setAlpha(alpha)
         self.highlight.setFillColor(color)  # sets fill with alpha
         self.highlight.setBuffer(buffer)
-        self.highlight.setMinWidth(min_width)
-        self.highlight.setWidth(4)
+        self.highlight.setWidth(width)
         self.highlight.show()
 
     def delete_highlight(self):

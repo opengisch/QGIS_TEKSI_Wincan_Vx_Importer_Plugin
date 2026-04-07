@@ -69,6 +69,12 @@ class SettingsDialog(QDialog, DialogUi):
             )
         self.import_log_dir_widget.setFilePath(log_dir)
 
+        # Highlight settings
+        self.highlight_color_button.setColor(self.settings.highlight_color.value())
+        self.highlight_color_button.setAllowOpacity(True)
+        self.highlight_buffer_spinbox.setValue(self.settings.highlight_buffer.value())
+        self.highlight_width_spinbox.setValue(self.settings.highlight_width.value())
+
     def accept(self):
         for setting_key in SETTINGS:
             widget = getattr(self, setting_key)
@@ -77,4 +83,10 @@ class SettingsDialog(QDialog, DialogUi):
                 widget.itemData(widget.currentIndex(), QgsMapLayerModel.CustomRole.LayerId)
             )
         self.settings.import_log_dir.setValue(self.import_log_dir_widget.filePath())
+
+        # Highlight settings
+        self.settings.highlight_color.setValue(self.highlight_color_button.color())
+        self.settings.highlight_buffer.setValue(self.highlight_buffer_spinbox.value())
+        self.settings.highlight_width.setValue(self.highlight_width_spinbox.value())
+
         super(SettingsDialog, self).accept()

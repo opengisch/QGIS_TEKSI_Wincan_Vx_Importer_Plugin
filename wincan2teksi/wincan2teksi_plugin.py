@@ -97,10 +97,6 @@ class Wincan2Teksi(QObject):
 
         QgsSettingsTree.unregisterPluginTreeNode(PLUGIN_NAME)
 
-    # @pyqtSlot(str, QgsMessageBar.MessageLevel)
-    # def display_message(self, message, level):
-    #    self.iface.messageBar().pushMessage("Wincan 2 Teksi", message, level)
-
     def open_inspection(self):
         db3_path = self.settings.db3_path.value()
         if db3_path == "":

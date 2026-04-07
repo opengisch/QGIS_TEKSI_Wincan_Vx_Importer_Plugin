@@ -24,9 +24,12 @@
 # ---------------------------------------------------------------------
 
 
+from qgis.PyQt.QtGui import QColor
 from qgis.core import (
     QgsSettingsTree,
     QgsSettingsEntryBool,
+    QgsSettingsEntryColor,
+    QgsSettingsEntryInteger,
     QgsSettingsEntryString,
     QgsSettingsEntryDouble,
 )
@@ -96,5 +99,11 @@ class Settings:
             cls.import_log_dir = QgsSettingsEntryString("import_log_dir", settings_node, "")
 
             cls.show_logs = QgsSettingsEntryBool("show_logs", settings_node, False)
+
+            cls.highlight_color = QgsSettingsEntryColor(
+                "highlight_color", settings_node, QColor("#ffff00")
+            )
+            cls.highlight_buffer = QgsSettingsEntryDouble("highlight_buffer", settings_node, 1.0)
+            cls.highlight_width = QgsSettingsEntryInteger("highlight_width", settings_node, 4)
 
         return cls.instance
