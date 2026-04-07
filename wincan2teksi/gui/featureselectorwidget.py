@@ -24,7 +24,7 @@
 # ---------------------------------------------------------------------
 
 
-from qgis.PyQt.QtCore import pyqtSignal, pyqtSlot, QSettings, QTimer
+from qgis.PyQt.QtCore import pyqtSignal, pyqtSlot, QSettings
 from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtWidgets import QWidget, QHBoxLayout, QLineEdit, QToolButton, QAction
 
@@ -214,11 +214,6 @@ class FeatureSelectorWidget(QWidget):
         self.highlight.setMinWidth(min_width)
         self.highlight.setWidth(4)
         self.highlight.show()
-
-        self.timer = QTimer(self)
-        self.timer.setSingleShot(True)
-        self.timer.timeout.connect(self.delete_highlight)
-        self.timer.start(3000)
 
     def delete_highlight(self):
         if self.highlight is not None:
