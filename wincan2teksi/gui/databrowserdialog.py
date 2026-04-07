@@ -36,8 +36,8 @@ from qgis.PyQt.QtGui import QAction, QDesktopServices
 from qgis.PyQt.QtWidgets import QDialog, QGroupBox, QMenuBar, QMessageBox, QVBoxLayout
 from qgis.PyQt.uic import loadUiType
 
-from qgis.core import QgsExpressionContextUtils, QgsProject, QgsFeature, QgsFeatureRequest
-from qgis.gui import QgsGui, QgsAttributeEditorContext, QgisInterface
+from qgis.core import Qgis, QgsExpressionContextUtils, QgsProject, QgsFeature, QgsFeatureRequest
+from qgis.gui import QgsGui, QgsAttributeEditorContext, QgisInterface, QgsMessageBar
 
 from wincan2teksi.core.settings import Settings
 from wincan2teksi.core.exceptions import W2TLayerNotFound
@@ -101,7 +101,12 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                     self.tr("pypdf is not installed. PDF page matching is not available.")
                 )
 
-        self.cannotImportScrollArea.hide()
+        self.message_bar = QgsMessageBar(self)
+        self.message_bar.setFixedHeight(60)
+        placeholder_layout = QVBoxLayout(self.messageBar_placeholder)
+        placeholder_layout.setContentsMargins(0, 0, 0, 0)
+        placeholder_layout.addWidget(self.message_bar)
+
         self.progressBar.setTextVisible(True)
         self.progressBar.hide()
         self.cancelButton.hide()
@@ -277,11 +282,12 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                     if feature.isValid():
                         section.teksi_channel_id_1 = feature.attribute("obj_id")
                 except W2TLayerNotFound as e:
-                    self.cannotImportScrollArea.show()
-                    self.cannotImportLabel.setText(
+                    self.message_bar.pushMessage(
+                        self.tr("Error"),
                         self.tr("The channel layer is missing in the project: {error}").format(
                             error=str(e)
-                        )
+                        ),
+                        Qgis.MessageLevel.Critical,
                     )
                     self.hide_progress()
                     return
@@ -305,7 +311,7 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
 
     @pyqtSlot()
     def on_importButton_clicked(self):
-        self.cannotImportScrollArea.hide()
+        self.message_bar.clearWidgets()
 
         # Warn if some sections are unchecked
         unchecked = sum(
@@ -351,9 +357,10 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
         join_layer_id = self.settings.join_maintence_wastewaterstructure_layer.value()
         join_layer = QgsProject.instance().mapLayer(join_layer_id)
         if join_layer is None:
-            self.cannotImportScrollArea.show()
-            self.cannotImportLabel.setText(
-                self.tr("The join layer '{layer_id}' is missing in the project.")
+            self.message_bar.pushMessage(
+                self.tr("Error"),
+                self.tr("The join layer '{layer_id}' is missing in the project."),
+                Qgis.MessageLevel.Critical,
             )
             self.hide_progress()
             return
@@ -391,8 +398,8 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                     break
                                 f = section_at_id(fid)
                                 if f.isValid() is False:
-                                    self.cannotImportScrollArea.show()
-                                    self.cannotImportLabel.setText(
+                                    self.message_bar.pushMessage(
+                                        self.tr("Error"),
                                         self.tr(
                                             "Inspection {i} from manhole {c1} to {c2}"
                                             " has an non-existent channel assigned."
@@ -400,7 +407,8 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                             i=section.counter,
                                             c1=section.from_node,
                                             c2=section.to_node,
-                                        )
+                                        ),
+                                        Qgis.MessageLevel.Critical,
                                     )
                                     self.sectionWidget.select_section(s_id)
                                     self.hide_progress()
@@ -408,8 +416,8 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                 reach_features.append(QgsFeature(f))
 
                             if len(reach_features) == 0:
-                                self.cannotImportScrollArea.show()
-                                self.cannotImportLabel.setText(
+                                self.message_bar.pushMessage(
+                                    self.tr("Error"),
                                     self.tr(
                                         "Inspection {i} from manhole {c1} to {c2}"
                                         " has no channel assigned."
@@ -417,7 +425,8 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                         i=section.counter,
                                         c1=section.from_node,
                                         c2=section.to_node,
-                                    )
+                                    ),
+                                    Qgis.MessageLevel.Critical,
                                 )
                                 self.sectionWidget.select_section(s_id)
                                 self.hide_progress()
@@ -465,8 +474,8 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                             # in case several sections in inspection data correspond to a single section in teksi data
                             # substract length from previous sections in inspection data
                             if not previous_section_imported:
-                                self.cannotImportScrollArea.show()
-                                self.cannotImportLabel.setText(
+                                self.message_bar.pushMessage(
+                                    self.tr("Error"),
                                     self.tr(
                                         "Inspection {i} from manhole {c1} to {c2}"
                                         " uses previous channel, but it is not defined."
@@ -474,7 +483,8 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                         i=section.counter,
                                         c1=section.from_node,
                                         c2=section.to_node,
-                                    )
+                                    ),
+                                    Qgis.MessageLevel.Critical,
                                 )
                                 self.sectionWidget.select_section(s_id)
                                 self.hide_progress()
@@ -531,8 +541,8 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                             ):  # add 50cm tolerance
                                                 break
                                             else:
-                                                self.cannotImportScrollArea.show()
-                                                self.cannotImportLabel.setText(
+                                                self.message_bar.pushMessage(
+                                                    self.tr("Error"),
                                                     self.tr(
                                                         "Inspection {i} from manhole {c1} to {c2}"
                                                         " has observations further than the length"
@@ -541,7 +551,8 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                                         i=section.counter,
                                                         c1=section.from_node,
                                                         c2=section.to_node,
-                                                    )
+                                                    ),
+                                                    Qgis.MessageLevel.Critical,
                                                 )
                                                 self.sectionWidget.select_section(s_id)
                                                 self.hide_progress()
@@ -707,8 +718,11 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                                     + f"{_fields}"
                                                 )
                                                 logger.error(message)
-                                                self.cannotImportScrollArea.show()
-                                                self.cannotImportLabel.setText(message)
+                                                self.message_bar.pushMessage(
+                                                    self.tr("Error"),
+                                                    message,
+                                                    Qgis.MessageLevel.Critical,
+                                                )
                                                 raise InterruptedError("Import failed")
 
                                 # write maintenance feature
@@ -734,8 +748,11 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                         ).format(fid=maintenance["obj_id"])
                                         + f"{_fields}"
                                     )
-                                    self.cannotImportScrollArea.show()
-                                    self.cannotImportLabel.setText(message)
+                                    self.message_bar.pushMessage(
+                                        self.tr("Error"),
+                                        message,
+                                        Qgis.MessageLevel.Critical,
+                                    )
                                     raise InterruptedError("Import failed")
 
                                 # set fkey maintenance event id to all damages
@@ -763,8 +780,11 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                             + f"{_fields}"
                                         )
                                         logger.error(message)
-                                        self.cannotImportScrollArea.show()
-                                        self.cannotImportLabel.setText(message)
+                                        self.message_bar.pushMessage(
+                                            self.tr("Error"),
+                                            message,
+                                            Qgis.MessageLevel.Critical,
+                                        )
                                         raise InterruptedError("Import failed")
 
                                     # add media files to od_file with reference to damage
@@ -838,8 +858,11 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                                 + f"{_fields}"
                                             )
                                             logger.error(message)
-                                            self.cannotImportScrollArea.show()
-                                            self.cannotImportLabel.setText(message)
+                                            self.message_bar.pushMessage(
+                                                self.tr("Error"),
+                                                message,
+                                                Qgis.MessageLevel.Critical,
+                                            )
                                             raise InterruptedError("Import failed")
 
                                 # write in relation table (wastewater structure - maintenance events)
@@ -873,8 +896,11 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                         + f"{_fields}"
                                     )
                                     logger.error(message)
-                                    self.cannotImportScrollArea.show()
-                                    self.cannotImportLabel.setText(message)
+                                    self.message_bar.pushMessage(
+                                        self.tr("Error"),
+                                        message,
+                                        Qgis.MessageLevel.Critical,
+                                    )
                                     raise InterruptedError("Import failed")
 
                                 # get current reach
@@ -910,15 +936,25 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
             return
 
         self.added_features = dict(added_features)
+        total_features = 0
+        summary_parts = []
         for layer_id, obj_ids in self.added_features.items():
             layer_name = QgsProject.instance().mapLayer(layer_id).name()
             logger.info(f"Added {len(obj_ids)} features to {layer_name}")
+            total_features += len(obj_ids)
+            summary_parts.append(f"{len(obj_ids)} {layer_name}")
 
         self._save_import_log(self.added_features)
 
         self.progressBar.hide()
         self.cancelButton.hide()
         self.importButton.show()
+
+        self.message_bar.pushMessage(
+            self.tr("Success"),
+            self.tr("Import completed: {details}.").format(details=", ".join(summary_parts)),
+            Qgis.MessageLevel.Success,
+        )
 
     def check_media_file_exists(self, file_path, skip_missing_files):
         """Check if media file exists, prompt user if not.
