@@ -654,6 +654,8 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                 with edit(file_layer):
                     with edit(damage_layer):
                         with edit(maintenance_layer):
+                            if wsl is not None:
+                                wsl.startEditing()
                             i = 0
                             for ws_obj_id, elements in features.items():
                                 QCoreApplication.processEvents()
@@ -926,8 +928,7 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                                     structure_condition
                                                 )
                                             )
-                                            with edit(wsl):
-                                                wsl.updateFeature(rf)
+                                            wsl.updateFeature(rf)
 
                                 i += 1
                                 self.progressBar.setValue(i)
