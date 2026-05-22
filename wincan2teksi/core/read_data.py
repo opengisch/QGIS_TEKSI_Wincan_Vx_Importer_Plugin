@@ -47,7 +47,7 @@ def __read_table(
     if table_name not in ALLOWED_TABLES:
         raise ValueError(f"Table name '{table_name}' is not allowed.")
 
-    query = f"SELECT * FROM {table_name}"
+    query = f"SELECT * FROM {table_name}"  # nosec B608 - table_name validated against ALLOWED_TABLES
     params = []
     where_parts = []
 
