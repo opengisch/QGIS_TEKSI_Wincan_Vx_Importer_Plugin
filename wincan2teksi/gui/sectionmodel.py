@@ -1,6 +1,5 @@
-from qgis.PyQt.QtCore import QAbstractTableModel, QModelIndex, Qt, QSortFilterProxyModel
+from qgis.PyQt.QtCore import QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt
 from qgis.PyQt.QtGui import QColor, QFont
-
 
 Column = {"Number": 0, "FromNode": 1, "ToNode": 2}
 

@@ -24,15 +24,15 @@
 # ---------------------------------------------------------------------
 
 
-from qgis.PyQt.QtGui import QColor
 from qgis.core import (
-    QgsSettingsTree,
     QgsSettingsEntryBool,
     QgsSettingsEntryColor,
+    QgsSettingsEntryDouble,
     QgsSettingsEntryInteger,
     QgsSettingsEntryString,
-    QgsSettingsEntryDouble,
+    QgsSettingsTree,
 )
+from qgis.PyQt.QtGui import QColor
 
 PLUGIN_NAME = "wincan2teksi"
 
@@ -42,7 +42,7 @@ class Settings:
 
     def __new__(cls) -> "Settings":
         if cls.instance is None:
-            cls.instance = super(Settings, cls).__new__(cls)
+            cls.instance = super().__new__(cls)
 
             settings_node = QgsSettingsTree.createPluginTreeNode(pluginName=PLUGIN_NAME)
 

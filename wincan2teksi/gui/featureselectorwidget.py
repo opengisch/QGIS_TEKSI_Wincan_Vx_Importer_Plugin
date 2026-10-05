@@ -24,23 +24,22 @@
 # ---------------------------------------------------------------------
 
 
-from qgis.PyQt.QtCore import pyqtSignal, pyqtSlot
-from qgis.PyQt.QtGui import QAction, QColor
-from qgis.PyQt.QtWidgets import QWidget, QHBoxLayout, QLineEdit, QToolButton
-
 from qgis.core import (
     QgsApplication,
-    QgsFeature,
     QgsExpression,
     QgsExpressionContext,
     QgsExpressionContextScope,
+    QgsFeature,
 )
-from qgis.gui import QgsMapToolIdentifyFeature, QgsHighlight
+from qgis.gui import QgsHighlight, QgsMapToolIdentifyFeature
+from qgis.PyQt.QtCore import pyqtSignal, pyqtSlot
+from qgis.PyQt.QtGui import QAction, QColor
+from qgis.PyQt.QtWidgets import QHBoxLayout, QLineEdit, QToolButton, QWidget
 
 from wincan2teksi.core.settings import Settings
 
 
-class CanvasExtent(object):
+class CanvasExtent:
     Fixed = 1
     Pan = 2
     Scale = 3

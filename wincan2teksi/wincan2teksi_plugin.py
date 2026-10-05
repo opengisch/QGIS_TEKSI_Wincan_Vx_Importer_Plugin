@@ -23,18 +23,18 @@
 #
 # ---------------------------------------------------------------------
 
-import os.path
-from qgis.PyQt.QtCore import Qt, QObject, QSettings, QCoreApplication, QTranslator
-from qgis.PyQt.QtGui import QIcon, QColor
-from qgis.PyQt.QtWidgets import QAction, QFileDialog
-from qgis.core import Qgis, QgsProject, QgsSettingsTree
-from qgis.gui import QgsRubberBand, QgisInterface
-
 import logging
+import os.path
 from pathlib import Path
 
-from wincan2teksi.core.settings import Settings, PLUGIN_NAME
+from qgis.core import Qgis, QgsProject, QgsSettingsTree
+from qgis.gui import QgisInterface, QgsRubberBand
+from qgis.PyQt.QtCore import QCoreApplication, QObject, QSettings, Qt, QTranslator
+from qgis.PyQt.QtGui import QColor, QIcon
+from qgis.PyQt.QtWidgets import QAction, QFileDialog
+
 from wincan2teksi.core.read_data import read_data
+from wincan2teksi.core.settings import PLUGIN_NAME, Settings
 from wincan2teksi.gui.databrowserdialog import DataBrowserDialog
 from wincan2teksi.gui.settings_dialog import SettingsDialog
 

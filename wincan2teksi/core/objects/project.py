@@ -1,5 +1,7 @@
 from pathlib import Path
+
 from qgis.PyQt.QtCore import QDateTime
+
 from .section import Section
 
 

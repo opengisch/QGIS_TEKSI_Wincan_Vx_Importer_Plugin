@@ -23,9 +23,9 @@
 #
 # ---------------------------------------------------------------------
 
-from qgis.core import QgsProject, QgsFeature, QgsFeatureRequest
-
 import logging
+
+from qgis.core import QgsFeature, QgsFeatureRequest, QgsProject
 
 from wincan2teksi.core.exceptions import W2TLayerNotFound
 from wincan2teksi.core.settings import Settings
@@ -69,6 +69,6 @@ def section_at_id(obj_id):
             raise W2TLayerNotFound(
                 f"Channel layer with ID {layer_id} not found in the current QGIS project."
             )
-        request = QgsFeatureRequest().setFilterExpression("\"obj_id\" = '{}'".format(obj_id))
+        request = QgsFeatureRequest().setFilterExpression(f"\"obj_id\" = '{obj_id}'")
         feature = next(layer.getFeatures(request), QgsFeature())
     return feature

@@ -1,4 +1,3 @@
-# encoding: utf-8
 #
 # -----------------------------------------------------------
 #
@@ -26,8 +25,10 @@
 # ---------------------------------------------------------------------
 
 import json
+import logging
 import os
 
+from qgis.core import QgsFeatureRequest, QgsProject
 from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtWidgets import (
     QApplication,
@@ -38,10 +39,6 @@ from qgis.PyQt.QtWidgets import (
     QMessageBox,
     QVBoxLayout,
 )
-
-from qgis.core import QgsFeatureRequest, QgsProject
-
-import logging
 
 from wincan2teksi.core.layer_edit import edit
 from wincan2teksi.core.settings import Settings
