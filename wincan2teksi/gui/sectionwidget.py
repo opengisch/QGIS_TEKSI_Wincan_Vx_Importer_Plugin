@@ -23,21 +23,20 @@
 #
 # ---------------------------------------------------------------------
 
+import logging
 import os
 import re
-from qgis.PyQt.QtCore import pyqtSlot, Qt
-from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QWidget, QHeaderView, QMenu, QMessageBox
-from qgis.PyQt.uic import loadUiType
 
 from qgis.core import QgsProject
+from qgis.PyQt.QtCore import Qt, pyqtSlot
+from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtWidgets import QHeaderView, QMenu, QMessageBox, QWidget
+from qgis.PyQt.uic import loadUiType
 
-import logging
-
-from wincan2teksi.core.settings import Settings
 from wincan2teksi.core.section import find_section, section_at_id
+from wincan2teksi.core.settings import Settings
 from wincan2teksi.gui.featureselectorwidget import CanvasExtent
-from wincan2teksi.gui.sectionmodel import SectionTableModel, SectionFilterProxyModel
+from wincan2teksi.gui.sectionmodel import SectionFilterProxyModel, SectionTableModel
 
 logger = logging.getLogger(__name__)
 
@@ -210,11 +209,11 @@ class SectionWidget(QWidget, Ui_SectionWidget):
 
         self.usePreviousSectionCheckBox.setChecked(section.use_previous_section)
         self.endNodeEdit.setText(section.to_node)
-        self.pipeDiaEdit.setText("{}".format(section.section_size))
+        self.pipeDiaEdit.setText(f"{section.section_size}")
         self.pipeMaterialEdit.setText(section.pipe_material)
         # self.pipeWidthEdit.setText("{}".format(section.pipe_width))
         self.profileEdit.setText(section.profile)
-        self.sectionlengthEdit.setText("{}".format(section.section_length))
+        self.sectionlengthEdit.setText(f"{section.section_length}")
         self.sectionUseEdit.setText(section.section_use)
         self.startNodeEdit.setText(section.from_node)
         self.addressEdit.setText(section.address)

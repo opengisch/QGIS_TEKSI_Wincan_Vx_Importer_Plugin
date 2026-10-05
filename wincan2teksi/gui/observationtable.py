@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# coding: utf-8 -*-
 
 # -----------------------------------------------------------
 #
@@ -27,7 +26,7 @@
 # ---------------------------------------------------------------------
 
 from qgis.PyQt.QtCore import Qt
-from qgis.PyQt.QtWidgets import QTableWidget, QTableWidgetItem, QAbstractItemView
+from qgis.PyQt.QtWidgets import QAbstractItemView, QTableWidget, QTableWidgetItem
 
 IMPORT = 0
 FORCE_IMPORT = 1

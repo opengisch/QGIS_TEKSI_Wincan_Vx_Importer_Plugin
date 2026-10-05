@@ -1,4 +1,3 @@
-# encoding: utf-8
 #
 # #-----------------------------------------------------------
 #
@@ -26,35 +25,39 @@
 # ---------------------------------------------------------------------
 
 import json
-import re
+import logging
 import os
+import re
 from collections import defaultdict
 from datetime import datetime
 
-from qgis.PyQt.QtCore import pyqtSlot, QCoreApplication, QUrl, QStandardPaths
+from qgis.core import (
+    Qgis,
+    QgsExpressionContextUtils,
+    QgsFeature,
+    QgsFeatureRequest,
+    QgsProject,
+)
+from qgis.gui import QgisInterface, QgsAttributeEditorContext, QgsGui, QgsMessageBar
+from qgis.PyQt.QtCore import QCoreApplication, QStandardPaths, QUrl, pyqtSlot
 from qgis.PyQt.QtGui import QAction, QDesktopServices
 from qgis.PyQt.QtWidgets import QDialog, QGroupBox, QMenuBar, QMessageBox, QVBoxLayout
 from qgis.PyQt.uic import loadUiType
 
-from qgis.core import Qgis, QgsExpressionContextUtils, QgsProject, QgsFeature, QgsFeatureRequest
-from qgis.gui import QgsGui, QgsAttributeEditorContext, QgisInterface, QgsMessageBar
-
-from wincan2teksi.core.settings import Settings
 from wincan2teksi.core.exceptions import W2TLayerNotFound
-from wincan2teksi.core.section import find_section, section_at_id
-from wincan2teksi.core.vsacode import (
-    damage_code_to_vl,
-    damage_level_to_vl,
-    damage_level_2_structure_condition,
-    structure_condition_2_damage_level,
-)
 from wincan2teksi.core.layer_edit import edit
 from wincan2teksi.core.read_data import WinCanData
+from wincan2teksi.core.section import find_section, section_at_id
+from wincan2teksi.core.settings import Settings
+from wincan2teksi.core.vsacode import (
+    damage_code_to_vl,
+    damage_level_2_structure_condition,
+    damage_level_to_vl,
+    structure_condition_2_damage_level,
+)
 from wincan2teksi.gui.logs_widget import LogsWidget
 from wincan2teksi.gui.settings_dialog import SettingsDialog
 from wincan2teksi.gui.undoimportdialog import UndoImportDialog
-
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -280,8 +283,8 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                         # try without trailing alpha char
                         feature = find_section(
                             channel,
-                            re.sub("\D*$", "", section.from_node),
-                            re.sub("\D*$", "", section.to_node),
+                            re.sub(r"\D*$", "", section.from_node),
+                            re.sub(r"\D*$", "", section.to_node),
                         )
                     if feature.isValid():
                         section.teksi_channel_id_1 = feature.attribute("obj_id")
@@ -512,9 +515,7 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                     self.projects[p_id].sections[offset_section_id].section_length
                                 )
                                 logger.debug(
-                                    "using previous section: {} with distance offset {}".format(
-                                        offset_section_id, distance_offset
-                                    )
+                                    f"using previous section: {offset_section_id} with distance offset {distance_offset}"
                                 )
 
                                 # add corresponding damages
@@ -912,7 +913,7 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                 # get current reach
                                 if wsl is not None:
                                     request = QgsFeatureRequest().setFilterExpression(
-                                        "\"obj_id\" = '{}'".format(ws_obj_id)
+                                        f"\"obj_id\" = '{ws_obj_id}'"
                                     )
                                     rf = next(wsl.getFeatures(request), QgsFeature())
                                     if rf.isValid():
@@ -920,8 +921,9 @@ class DataBrowserDialog(QDialog, Ui_DataBrowserDialog):
                                         old_level = structure_condition_2_damage_level(
                                             rf["structure_condition"]
                                         )
-                                        if old_level is None or old_level > "Z{}".format(
-                                            structure_condition
+                                        if (
+                                            old_level is None
+                                            or old_level > f"Z{structure_condition}"
                                         ):
                                             rf["structure_condition"] = (
                                                 damage_level_2_structure_condition(

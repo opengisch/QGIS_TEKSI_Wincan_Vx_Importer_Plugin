@@ -23,10 +23,10 @@
 #
 # ---------------------------------------------------------------------
 
-from qgis.core import QgsProject, QgsFeature, QgsFeatureRequest, NULL
+from qgis.core import NULL, QgsFeature, QgsFeatureRequest, QgsProject
 
-from wincan2teksi.core.settings import Settings
 from wincan2teksi.core.exceptions import W2TLayerNotFound
+from wincan2teksi.core.settings import Settings
 
 CODE_PREMATCH = {
     "BAG": "BAGA",
@@ -46,7 +46,7 @@ def damage_code_to_vl(code: str) -> str:
             f"Damage channel layer with ID {layer_id} not found in the current QGIS project."
         )
     code = CODE_PREMATCH.get(code, code)
-    request_text = "\"value_en\" = '{}'".format(code)
+    request_text = f"\"value_en\" = '{code}'"
     request = QgsFeatureRequest().setFilterExpression(request_text)
     feature = next(layer.getFeatures(request), QgsFeature())
 
@@ -68,7 +68,7 @@ def damage_level_to_vl(code):
         raise W2TLayerNotFound(
             f"Damage single class layer with ID {layer_id} not found in the current QGIS project."
         )
-    request_text = "\"value_en\" = 'EZ{}'".format(code)
+    request_text = f"\"value_en\" = 'EZ{code}'"
     request = QgsFeatureRequest().setFilterExpression(request_text)
     feature = next(layer.getFeatures(request), QgsFeature())
 
@@ -89,7 +89,7 @@ def damage_level_2_structure_condition(level):
         raise W2TLayerNotFound(
             f"Wastewater structure condition layer with ID {layer_id} not found in the current QGIS project."
         )
-    request_text = "\"value_en\" = 'Z{}'".format(level)
+    request_text = f"\"value_en\" = 'Z{level}'"
     request = QgsFeatureRequest().setFilterExpression(request_text)
     feature = next(layer.getFeatures(request), QgsFeature())
 
@@ -114,7 +114,7 @@ def structure_condition_2_damage_level(code):
     if code == NULL or code is None:
         return None
 
-    request_text = "\"code\" = '{}'".format(code)
+    request_text = f"\"code\" = '{code}'"
     request = QgsFeatureRequest().setFilterExpression(request_text)
     feature = next(layer.getFeatures(request), QgsFeature())
     # print(request_text, feature.isValid())

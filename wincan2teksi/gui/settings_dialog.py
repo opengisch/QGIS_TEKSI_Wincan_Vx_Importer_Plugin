@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 /***************************************************************************
 
@@ -18,11 +17,12 @@
 """
 
 import os
+
+from qgis.core import QgsMapLayerModel
+from qgis.gui import QgsFileWidget
 from qgis.PyQt.QtCore import QStandardPaths
 from qgis.PyQt.QtWidgets import QDialog
 from qgis.PyQt.uic import loadUiType
-from qgis.core import QgsMapLayerModel
-from qgis.gui import QgsFileWidget
 
 from wincan2teksi.core.settings import Settings
 
@@ -89,4 +89,4 @@ class SettingsDialog(QDialog, DialogUi):
         self.settings.highlight_buffer.setValue(self.highlight_buffer_spinbox.value())
         self.settings.highlight_width.setValue(self.highlight_width_spinbox.value())
 
-        super(SettingsDialog, self).accept()
+        super().accept()

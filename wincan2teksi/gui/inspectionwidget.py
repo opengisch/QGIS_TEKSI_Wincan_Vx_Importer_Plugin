@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 # -----------------------------------------------------------
 #
@@ -27,7 +26,8 @@
 # ---------------------------------------------------------------------
 
 import os
-from qgis.PyQt.QtCore import pyqtSlot, pyqtSignal
+
+from qgis.PyQt.QtCore import pyqtSignal, pyqtSlot
 from qgis.PyQt.QtWidgets import QWidget
 from qgis.PyQt.uic import loadUiType
 
@@ -87,7 +87,7 @@ class InspectionWidget(QWidget, Ui_InspectionWidget):
 
         self.inspMethodEdit.setText(inspection.method)
         self.inspectionDirEdit.setText(str(inspection.direction))
-        self.inspectedLengthEdit.setText("{}".format(inspection.inspection_length))
+        self.inspectedLengthEdit.setText(f"{inspection.inspection_length}")
         self.operatorEdit.setText(inspection.operator)
         self.importCheckBox.setChecked(inspection.import_)
 

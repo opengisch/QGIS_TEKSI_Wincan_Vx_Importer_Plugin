@@ -1,4 +1,3 @@
-# encoding: utf-8
 #
 # #-----------------------------------------------------------
 #
@@ -32,7 +31,7 @@ from qgis.core import QgsEditError
 logger = logging.getLogger(__name__)
 
 
-class edit(object):
+class edit:
     """
     This is a modification of qgis.core.edit
     It can be used both in transaction and standard mode
@@ -45,15 +44,13 @@ class edit(object):
         # allow combination of nested `with edit(layer)`
         # startEditing returns false in case of transaction groups
         if not self.layer.isEditable():
-            logger.debug("making {} editable".format(self.layer.id()))
+            logger.debug(f"making {self.layer.id()} editable")
             assert self.layer.startEditing()
         return self.layer
 
     def __exit__(self, ex_type, ex_value, traceback):
         logger.debug(
-            "exiting edit for layer {}: is editable: {} excep: {}({})".format(
-                self.layer.id(), self.layer.isEditable(), ex_type, ex_value
-            )
+            f"exiting edit for layer {self.layer.id()}: is editable: {self.layer.isEditable()} excep: {ex_type}({ex_value})"
         )
         if ex_type is None:
             # allow combination of nested `with edit(layer)`

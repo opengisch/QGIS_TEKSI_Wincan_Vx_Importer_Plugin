@@ -1,14 +1,12 @@
 #!/usr/bin/env python
-# coding: utf-8 -*-
 # ...existing code...
-from pathlib import Path
+import logging
 import re
 import sqlite3
+from pathlib import Path
 
-from wincan2teksi.core.objects import Project, Section, Inspection, Observation
 from wincan2teksi.core.exceptions import InvalidProjectFile
-
-import logging
+from wincan2teksi.core.objects import Inspection, Observation, Project, Section
 
 logger = logging.getLogger(__name__)
 

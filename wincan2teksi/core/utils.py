@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 /***************************************************************************
  Copyright (C) 2019 Denis Rouzaud
@@ -13,9 +12,10 @@
  ***************************************************************************/
 """
 
-from qgis.PyQt.QtCore import QObject, pyqtSignal
 import logging
 from logging import LogRecord
+
+from qgis.PyQt.QtCore import QObject, pyqtSignal
 
 PLUGIN_LOGGER_NAME = "wincan2teksi"
 
